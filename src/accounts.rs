@@ -1,7 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::account_info::AccountInfo;
 use solana_program::instruction::Instruction;
-use solana_program::pubkey::Pubkey;
 
 pub trait InstructionsAccount {
     fn get_instruction<P: BorshDeserialize + BorshSerialize>(

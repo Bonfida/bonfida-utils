@@ -8,7 +8,6 @@ use syn::{
 };
 
 pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
-    let mut original = ast.clone();
     ast.ident = Ident::new("AccountKeys", Span::call_site().into());
     ast.vis = Visibility::Public(VisPublic {
         pub_token: Pub(proc_macro2::Span::call_site()),
@@ -16,32 +15,21 @@ pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
     let mut contains_slice = false;
     let generic = ast.generics.params[0].clone();
     ast.generics = Generics::default();
-    if let (
-        syn::Data::Struct(syn::DataStruct {
-            struct_token: _,
-            fields:
-                syn::Fields::Named(syn::FieldsNamed {
-                    brace_token: _,
-                    named,
-                }),
-            semi_token: _,
-        }),
-        syn::Data::Struct(syn::DataStruct {
-            struct_token: _,
-            fields:
-                syn::Fields::Named(syn::FieldsNamed {
-                    brace_token: _,
-                    named: named_original,
-                }),
-            semi_token: _,
-        }),
-    ) = (&mut ast.data, &mut original.data)
+    if let syn::Data::Struct(syn::DataStruct {
+        struct_token: _,
+        fields:
+            syn::Fields::Named(syn::FieldsNamed {
+                brace_token: _,
+                named,
+            }),
+        semi_token: _,
+    }) = &mut ast.data
     {
         let mut function_arguments: Punctuated<_, Comma> = Punctuated::new();
         let mut function_body: Block = syn::parse(quote!({}).into()).unwrap();
         let key_arg: FnArg = syn::parse(quote!(foo: Pubkey).into()).unwrap();
         let slice_arg: FnArg = syn::parse(quote!(foo: &[Pubkey]).into()).unwrap();
-        for (n, n_original) in named.into_iter().zip(named_original.into_iter()) {
+        for n in named.into_iter() {
             let mut writable = false;
             let mut signer = false;
             for i in 0..n.attrs.len() {
@@ -68,8 +56,6 @@ pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
                             _ => {}
                         }
                     }
-                    n.attrs.remove(i);
-                    n_original.attrs.remove(i);
                     break;
                 }
             }
@@ -133,8 +119,6 @@ pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
             ast.generics.params.push(generic);
         }
         let mut gen = proc_macro2::TokenStream::new();
-        // let mut gen = original.into_token_stream();
-        ast.to_tokens(&mut gen);
         let function = quote!(
             use solana_program::instruction::{AccountMeta, Instruction};
             impl<'a> InstructionsAccount for Accounts<'a, Pubkey> {
