@@ -1,13 +1,10 @@
 use proc_macro::{Span, TokenStream};
 use proc_macro2::TokenTree;
 use quote::{quote, ToTokens};
-use solana_program::pubkey::Pubkey;
 use syn::{
-    braced,
     punctuated::Punctuated,
-    token::{Comma, Pub, Semi},
-    Block, ExprBlock, Field, FnArg, Generics, Ident, PatType, Stmt, Token, Type, TypeReference,
-    TypeSlice, VisPublic, Visibility,
+    token::{Comma, Pub},
+    Block, FnArg, Generics, Ident, Stmt, Type, TypeReference, TypeSlice, VisPublic, Visibility,
 };
 
 pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
