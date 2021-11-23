@@ -1,8 +1,10 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::instruction::Instruction;
 
+use crate::borsh_size::BorshSize;
+
 pub trait InstructionsAccount {
-    fn get_instruction<P: BorshDeserialize + BorshSerialize>(
+    fn get_instruction<P: BorshDeserialize + BorshSerialize + BorshSize>(
         &self,
         instruction_id: u8,
         params: P,
@@ -12,7 +14,8 @@ pub trait InstructionsAccount {
 #[cfg(test)]
 mod tests {
     use super::InstructionsAccount;
-    use bonfida_macros::InstructionsAccount;
+    use crate::borsh_size::BorshSize;
+    use bonfida_macros::{BorshSize, InstructionsAccount};
     use borsh::{BorshDeserialize, BorshSerialize};
     use solana_program::pubkey::Pubkey;
     #[test]
@@ -35,7 +38,7 @@ mod tests {
             h: &'a [T],
         }
 
-        #[derive(BorshDeserialize, BorshSerialize)]
+        #[derive(BorshDeserialize, BorshSerialize, BorshSize, Clone)]
         pub struct Params {
             pub match_limit: u64,
         }
@@ -49,7 +52,8 @@ mod tests {
             g: &[Pubkey::new_unique()],
             h: &[Pubkey::new_unique()],
         };
-        let instruction = a.get_instruction(0, Params { match_limit: 46 });
+        let params = Params { match_limit: 46 };
+        let instruction = a.get_instruction(0, params.clone());
         assert_eq!(instruction.accounts[0].is_writable, true);
         assert_eq!(instruction.accounts[0].is_signer, false);
         assert_eq!(instruction.accounts[0].pubkey, *a.a);
@@ -75,5 +79,10 @@ mod tests {
         assert_eq!(instruction.accounts[7].is_writable, false);
         assert_eq!(instruction.accounts[7].is_signer, true);
         assert_eq!(instruction.accounts[7].pubkey, a.h[0]);
+
+        let mut instruction_data = vec![0];
+        instruction_data.extend(&params.try_to_vec().unwrap());
+
+        assert_eq!(instruction_data, instruction.data);
     }
 }

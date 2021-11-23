@@ -122,10 +122,15 @@ pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
         let function = quote!(
             use solana_program::instruction::{AccountMeta, Instruction};
             impl<'a> InstructionsAccount for Accounts<'a, Pubkey> {
-                fn get_instruction<P: BorshDeserialize + BorshSerialize>(&self, instruction_id: u8, params: P) -> Instruction {
+                fn get_instruction<P: BorshDeserialize + BorshSerialize + BorshSize>(&self, instruction_id: u8, params: P) -> Instruction {
                     let mut accounts_vec = Vec::new();
-                    let mut data = vec![instruction_id];
-                    data.extend(&params.try_to_vec().unwrap());
+                    let cap = 1 + params.borsh_len();
+                    let mut data = Vec::with_capacity(cap);
+                    unsafe {
+                        data.set_len(cap);
+                    }
+                    data[0] = instruction_id;
+                    params.serialize(&mut (&mut data[1..])).unwrap();
 
                     #function_body
                     Instruction {
