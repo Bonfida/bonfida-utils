@@ -132,20 +132,23 @@ pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
         if contains_slice {
             ast.generics.params.push(generic);
         }
-        let mut gen = original.into_token_stream();
+        let mut gen = proc_macro2::TokenStream::new();
+        // let mut gen = original.into_token_stream();
         ast.to_tokens(&mut gen);
         let function = quote!(
-            use solana_program::instruction::{Instruction, AccountMeta};
-            pub fn get_instruction(instruction_id: u8, accounts: AccountKeys, params: Params) -> Instruction {
-                let mut accounts_vec = Vec::new();
-                let mut data = vec![instruction_id];
-                data.extend(&params.try_to_vec().unwrap());
+            use solana_program::instruction::{AccountMeta, Instruction};
+            impl<'a> InstructionsAccount for Accounts<'a, Pubkey> {
+                fn get_instruction<P: BorshDeserialize + BorshSerialize>(&self, instruction_id: u8, params: P) -> Instruction {
+                    let mut accounts_vec = Vec::new();
+                    let mut data = vec![instruction_id];
+                    data.extend(&params.try_to_vec().unwrap());
 
-                #function_body
-                Instruction {
-                    program_id: crate::ID,
-                    accounts: accounts_vec,
-                    data
+                    #function_body
+                    Instruction {
+                        program_id: crate::ID,
+                        accounts: accounts_vec,
+                        data
+                    }
                 }
             }
         );
@@ -158,23 +161,23 @@ pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
 
 fn account_push_expr(ident: Ident, writable: bool, signer: bool) -> Stmt {
     let t: TokenStream = if writable {
-        quote!(accounts_vec.push(AccountMeta::new(accounts.#ident, #signer));).into()
+        quote!(accounts_vec.push(AccountMeta::new(*self.#ident, #signer));).into()
     } else {
-        quote!(accounts_vec.push(AccountMeta::new_readonly(accounts.#ident, #signer));).into()
+        quote!(accounts_vec.push(AccountMeta::new_readonly(*self.#ident, #signer));).into()
     };
     syn::parse(t).unwrap()
 }
 fn account_push_expr_slice(ident: Ident, writable: bool, signer: bool) -> Stmt {
     let t: TokenStream = if writable {
         quote!(
-            for k in accounts.#ident {
+            for k in self.#ident {
                 accounts_vec.push(AccountMeta::new(*k, #signer));
             }
         )
         .into()
     } else {
         quote!(
-            for k in accounts.#ident {
+            for k in self.#ident {
                 accounts_vec.push(AccountMeta::new_readonly(*k, #signer));
             }
         )
