@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{punctuated::Punctuated, Type, TypeArray};
+use syn::{Type, TypeArray};
 
 pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
     let struct_ident = ast.ident;
@@ -14,13 +14,13 @@ pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
         semi_token: _,
     }) = &mut ast.data
     {
-        let mut vars = named.into_iter().map(|n| {
+        let vars = named.into_iter().map(|n| {
             let field_ident = n.ident.clone().unwrap();
             match n.ty.clone() {
                 Type::Array(TypeArray {
-                    bracket_token,
-                    elem,
-                    semi_token,
+                    bracket_token: _,
+                    elem: _,
+                    semi_token: _,
                     len,
                 }) => quote!((#len) * self.#field_ident[0].borsh_len()),
                 Type::Path(_) => quote!(self.#field_ident.borsh_len()),
