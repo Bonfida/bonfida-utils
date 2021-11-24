@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     fs::File,
     io::{LineWriter, Read, Write},
 };
@@ -7,7 +8,7 @@ use convert_case::{Case, Casing};
 use proc_macro2::TokenTree;
 use syn::{
     punctuated::Punctuated, token::Comma, Attribute, Expr, ExprLit, Field, Fields, FieldsNamed,
-    Item, ItemStruct, Lit, Path, Type, TypeArray, TypePath,
+    Item, ItemEnum, ItemStruct, Lit, Path, Type, TypeArray, TypePath, Variant,
 };
 
 const HEADER: &str = include_str!("templates/template.ts");
@@ -17,8 +18,9 @@ struct SimpleField {
     ty: String,
 }
 
-pub fn generate(instructions_path: &str, output_path: &str) {
+pub fn generate(instructions_path: &str, instructions_enum_path: &str, output_path: &str) {
     let path = std::path::Path::new(instructions_path);
+    let instruction_tags = parse_instructions_enum(instructions_enum_path);
     let directory = std::fs::read_dir(path).unwrap();
     let mut output = get_header();
     for d in directory {
@@ -29,7 +31,14 @@ pub fn generate(instructions_path: &str, output_path: &str) {
             .to_str()
             .unwrap()
             .to_owned();
-        let s = process_file(&module_name, file.path().to_str().unwrap());
+        let instruction_tag = instruction_tags
+            .get(&module_name)
+            .unwrap_or_else(|| panic!("Instruction not found for {}", module_name));
+        let s = process_file(
+            &module_name,
+            *instruction_tag,
+            file.path().to_str().unwrap(),
+        );
         output.push_str(&s);
     }
 
@@ -37,11 +46,35 @@ pub fn generate(instructions_path: &str, output_path: &str) {
     out_file.write_all(&output.as_bytes()).unwrap();
 }
 
+pub fn parse_instructions_enum(instructions_enum_path: &str) -> HashMap<String, usize> {
+    let mut f = File::open(instructions_enum_path).unwrap();
+    let mut result_map = HashMap::new();
+    let mut raw_string = String::new();
+    f.read_to_string(&mut raw_string).unwrap();
+    let ast: syn::File = syn::parse_str(&raw_string).unwrap();
+    let instructions_enum = find_enum(&ast);
+    let enum_variants = get_enum_variants(instructions_enum);
+    for (
+        i,
+        Variant {
+            attrs,
+            ident,
+            fields,
+            discriminant,
+        },
+    ) in enum_variants.into_iter().enumerate()
+    {
+        let module_name = pascal_to_snake(&ident.to_string());
+        result_map.insert(module_name, i);
+    }
+    result_map
+}
+
 pub fn get_header() -> String {
     HEADER.to_owned()
 }
 
-pub fn process_file(module_name: &str, path: &str) -> String {
+pub fn process_file(module_name: &str, instruction_tag: usize, path: &str) -> String {
     let mut f = File::open(path).unwrap();
     let mut raw_string = String::new();
     f.read_to_string(&mut raw_string).unwrap();
@@ -57,7 +90,7 @@ pub fn process_file(module_name: &str, path: &str) -> String {
         "tag: number;".to_owned(),
     ];
     let mut declaration_statements = vec![];
-    let mut assign_statements = vec![format!("this.tag = {}", 0)];
+    let mut assign_statements = vec![format!("this.tag = {}", instruction_tag)];
     let mut schema_statements = vec!["[\"tag\", \"u8\"],".to_owned()];
     let mut accounts_statements = vec!["programId: PublicKey,".to_owned()];
     let mut keys_statements = vec![];
@@ -222,6 +255,9 @@ fn type_to_borsh(ty: &Type) -> String {
 fn snake_to_camel(s: &str) -> String {
     s.from_case(Case::Snake).to_case(Case::Camel)
 }
+fn pascal_to_snake(s: &str) -> String {
+    s.from_case(Case::Pascal).to_case(Case::Snake)
+}
 
 fn find_struct(ident_str: &str, file_ast: &syn::File) -> Item {
     file_ast
@@ -245,6 +281,32 @@ fn find_struct(ident_str: &str, file_ast: &syn::File) -> Item {
         })
         .unwrap()
         .clone()
+}
+
+fn find_enum(file_ast: &syn::File) -> Item {
+    file_ast
+        .items
+        .iter()
+        .find(|a| matches!(a, Item::Enum(_)))
+        .unwrap()
+        .clone()
+}
+
+fn get_enum_variants(s: Item) -> Punctuated<Variant, Comma> {
+    if let Item::Enum(ItemEnum {
+        attrs: _,
+        vis: _,
+        enum_token: _,
+        ident: _,
+        generics: _,
+        brace_token: _,
+        variants,
+    }) = s
+    {
+        variants
+    } else {
+        unreachable!()
+    }
 }
 
 fn get_struct_fields(s: Item) -> Punctuated<Field, Comma> {

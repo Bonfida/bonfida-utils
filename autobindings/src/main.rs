@@ -11,7 +11,17 @@ fn main() {
                 .takes_value(true)
                 .default_value("src/processor"),
         )
+        .arg(
+            Arg::with_name("instructions_enum_path")
+                .takes_value(true)
+                .default_value("src/instruction.rs"),
+        )
         .get_matches();
     let instructions_path = matches.value_of("instructions_path").unwrap();
-    generate(instructions_path, "../js/src/raw_instructions.ts");
+    let instructions_enum_path = matches.value_of("instructions_enum_path").unwrap();
+    generate(
+        instructions_path,
+        instructions_enum_path,
+        "../js/src/raw_instructions.ts",
+    );
 }
