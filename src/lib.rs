@@ -1,6 +1,8 @@
+#[cfg(test)]
 use solana_program::declare_id;
+#[cfg(test)]
+declare_id!("LiquidationRecord11111111111111111111111111");
 
-declare_id!("perpke6JybKfRDitCmnazpCrGN5JRApxxukhA9Js6E6");
 mod accounts;
 mod borsh_size;
 pub mod checks;
