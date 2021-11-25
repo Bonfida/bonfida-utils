@@ -159,7 +159,7 @@ pub fn process_file(module_name: &str, instruction_tag: usize, path: &str) -> St
     statements.extend(accounts_statements);
     statements.push("): TransactionInstruction {".to_owned());
     statements.push("const data = Buffer.from(this.serialize());".to_owned());
-    statements.push("let keys = [".to_owned());
+    statements.push("const keys = [".to_owned());
     statements.extend(keys_statements);
     statements.push("];".to_owned());
     statements.push("return new TransactionInstruction({".to_owned());
