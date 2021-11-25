@@ -96,7 +96,7 @@ pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
                         .iter()
                         .next()
                         .unwrap_or_else(|| panic!("{}", line!().to_string()));
-                    if &seg.ident.to_string() != "Option" {
+                    if seg.ident != "Option" {
                         unimplemented!()
                     }
                     function_body.stmts.push(account_push_option(

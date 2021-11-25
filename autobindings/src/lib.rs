@@ -1,22 +1,17 @@
 use std::{
     collections::HashMap,
     fs::File,
-    io::{LineWriter, Read, Write},
+    io::{Read, Write},
 };
 
 use convert_case::{Case, Casing};
 use proc_macro2::TokenTree;
 use syn::{
     punctuated::Punctuated, token::Comma, Attribute, Expr, ExprLit, Field, Fields, FieldsNamed,
-    Item, ItemEnum, ItemStruct, Lit, Path, Type, TypeArray, TypePath, Variant,
+    Item, ItemEnum, ItemStruct, Lit, Path, Type, TypeArray, TypePath, TypeReference, Variant,
 };
 
 const HEADER: &str = include_str!("templates/template.ts");
-
-struct SimpleField {
-    name: String,
-    ty: String,
-}
 
 pub fn generate(instructions_path: &str, instructions_enum_path: &str, output_path: &str) {
     let path = std::path::Path::new(instructions_path);
@@ -57,10 +52,10 @@ pub fn parse_instructions_enum(instructions_enum_path: &str) -> HashMap<String, 
     for (
         i,
         Variant {
-            attrs,
+            attrs: _,
             ident,
-            fields,
-            discriminant,
+            fields: _,
+            discriminant: _,
         },
     ) in enum_variants.into_iter().enumerate()
     {
@@ -124,12 +119,23 @@ pub fn process_file(module_name: &str, instruction_tag: usize, path: &str) -> St
     {
         let (writable, signer) = get_constraints(&attrs);
         let camel_case_ident = snake_to_camel(&ident.as_ref().unwrap().to_string());
-        accounts_statements.push(format!("{}: PublicKey,", camel_case_ident));
-        keys_statements.push("{".to_owned());
-        keys_statements.push(format!("pubkey: {},", camel_case_ident));
-        keys_statements.push(format!("isSigner: {},", signer));
-        keys_statements.push(format!("isWritable: {},", writable));
-        keys_statements.push("},".to_owned());
+        if is_slice(&ty) {
+            accounts_statements.push(format!("{}: PublicKey[],", camel_case_ident));
+            keys_statements.push(format!("for (let k of {}) {{", camel_case_ident));
+            keys_statements.push("keys.push({".to_owned());
+            keys_statements.push("pubkey: k,".to_owned());
+            keys_statements.push(format!("isSigner: {},", signer));
+            keys_statements.push(format!("isWritable: {},", writable));
+            keys_statements.push("});".to_owned());
+            keys_statements.push("}".to_owned());
+        } else {
+            accounts_statements.push(format!("{}: PublicKey,", camel_case_ident));
+            keys_statements.push("keys.push({".to_owned());
+            keys_statements.push(format!("pubkey: {},", camel_case_ident));
+            keys_statements.push(format!("isSigner: {},", signer));
+            keys_statements.push(format!("isWritable: {},", writable));
+            keys_statements.push("});".to_owned());
+        }
     }
     statements.extend(declaration_statements.clone());
     statements.push("static schema: Schema = new Map([".to_owned());
@@ -159,9 +165,11 @@ pub fn process_file(module_name: &str, instruction_tag: usize, path: &str) -> St
     statements.extend(accounts_statements);
     statements.push("): TransactionInstruction {".to_owned());
     statements.push("const data = Buffer.from(this.serialize());".to_owned());
-    statements.push("const keys = [".to_owned());
+    statements.push(
+        "let keys: { pubkey: PublicKey; isSigner: boolean; isWritable: boolean }[] = [];"
+            .to_owned(),
+    );
     statements.extend(keys_statements);
-    statements.push("];".to_owned());
     statements.push("return new TransactionInstruction({".to_owned());
     statements.push("keys,".to_owned());
     statements.push("programId,".to_owned());
@@ -182,7 +190,7 @@ fn type_to_js(ty: &Type) -> String {
         Type::Path(TypePath {
             qself: _,
             path: Path {
-                leading_colon,
+                leading_colon: _,
                 segments,
             },
         }) => {
@@ -201,7 +209,7 @@ fn type_to_js(ty: &Type) -> String {
             len:
                 Expr::Lit(ExprLit {
                     attrs: _,
-                    lit: Lit::Int(l),
+                    lit: Lit::Int(_),
                 }),
         }) => {
             let inner_type = type_to_js(elem);
@@ -219,7 +227,7 @@ fn type_to_borsh(ty: &Type) -> String {
         Type::Path(TypePath {
             qself: _,
             path: Path {
-                leading_colon,
+                leading_colon: _,
                 segments,
             },
         }) => {
@@ -359,4 +367,20 @@ fn get_constraints(attrs: &[Attribute]) -> (bool, bool) {
         }
     }
     (writable, signer)
+}
+
+fn is_slice(ty: &Type) -> bool {
+    if let Type::Reference(TypeReference {
+        and_token: _,
+        lifetime: _,
+        mutability: _,
+        elem,
+    }) = ty
+    {
+        let ty = *elem.clone();
+        if let Type::Slice(_) = ty {
+            return true;
+        }
+    }
+    false
 }
