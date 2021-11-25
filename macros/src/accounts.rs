@@ -1,10 +1,11 @@
+use std::convert::TryInto;
+
 use proc_macro::{Span, TokenStream};
 use proc_macro2::TokenTree;
 use quote::{quote, ToTokens};
 use syn::{
-    punctuated::Punctuated,
-    token::{Comma, Pub},
-    Block, FnArg, Generics, Ident, Stmt, Type, TypeReference, TypeSlice, VisPublic, Visibility,
+    token::Pub, Block, Generics, Ident, Stmt, Type, TypePath, TypeReference, TypeSlice, VisPublic,
+    Visibility,
 };
 
 pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
@@ -12,8 +13,6 @@ pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
     ast.vis = Visibility::Public(VisPublic {
         pub_token: Pub(proc_macro2::Span::call_site()),
     });
-    let mut contains_slice = false;
-    let generic = ast.generics.params[0].clone();
     ast.generics = Generics::default();
     if let syn::Data::Struct(syn::DataStruct {
         struct_token: _,
@@ -25,17 +24,19 @@ pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
         semi_token: _,
     }) = &mut ast.data
     {
-        let mut function_arguments: Punctuated<_, Comma> = Punctuated::new();
-        let mut function_body: Block = syn::parse(quote!({}).into()).unwrap();
-        let key_arg: FnArg = syn::parse(quote!(foo: Pubkey).into()).unwrap();
-        let slice_arg: FnArg = syn::parse(quote!(foo: &[Pubkey]).into()).unwrap();
+        let mut function_body: Block =
+            syn::parse(quote!({}).into()).unwrap_or_else(|_| panic!("{}", line!().to_string()));
         for n in named.into_iter() {
             let mut writable = false;
             let mut signer = false;
             for i in 0..n.attrs.len() {
                 if n.attrs[i].path.is_ident("cons") {
-                    let t = if let TokenTree::Group(g) =
-                        n.attrs[i].tokens.clone().into_iter().next().unwrap()
+                    let t = if let TokenTree::Group(g) = n.attrs[i]
+                        .tokens
+                        .clone()
+                        .into_iter()
+                        .next()
+                        .unwrap_or_else(|| panic!("{}", line!().to_string()))
                     {
                         g.stream()
                     } else {
@@ -60,63 +61,56 @@ pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
                 }
             }
 
-            n.ty = if let Type::Reference(TypeReference {
-                and_token,
-                lifetime,
-                mutability,
-                elem,
-            }) = n.ty.clone()
-            {
-                match *elem {
+            match n.ty.clone() {
+                Type::Reference(TypeReference {
+                    and_token: _,
+                    lifetime: _,
+                    mutability: _,
+                    elem,
+                }) => match *elem {
                     Type::Slice(TypeSlice {
                         elem: _,
-                        bracket_token,
+                        bracket_token: _,
                     }) => {
-                        contains_slice = true;
-                        let arg = if let FnArg::Typed(mut p) = slice_arg.clone() {
-                            p.pat = Box::new(syn::parse(n.ident.to_token_stream().into()).unwrap());
-                            FnArg::Typed(p)
-                        } else {
-                            panic!()
-                        };
-                        function_arguments.push(arg);
                         function_body.stmts.push(account_push_expr_slice(
-                            n.ident.clone().unwrap(),
+                            n.ident
+                                .clone()
+                                .unwrap_or_else(|| panic!("{}", line!().to_string())),
                             writable,
                             signer,
                         ));
-                        Type::Reference(TypeReference {
-                            and_token,
-                            lifetime,
-                            mutability,
-                            elem: Box::new(Type::Slice(TypeSlice {
-                                elem: Box::new(Type::Verbatim(quote!(Pubkey))),
-                                bracket_token,
-                            })),
-                        })
                     }
                     _ => {
-                        let arg = if let FnArg::Typed(mut p) = key_arg.clone() {
-                            p.pat = Box::new(syn::parse(n.ident.to_token_stream().into()).unwrap());
-                            FnArg::Typed(p)
-                        } else {
-                            panic!()
-                        };
-                        function_arguments.push(arg);
                         function_body.stmts.push(account_push_expr(
-                            n.ident.clone().unwrap(),
+                            n.ident
+                                .clone()
+                                .unwrap_or_else(|| panic!("{}", line!().to_string())),
                             writable,
                             signer,
                         ));
-                        Type::Verbatim(quote!(Pubkey))
                     }
+                },
+                Type::Path(TypePath { qself: _, path }) => {
+                    let seg = path
+                        .segments
+                        .iter()
+                        .next()
+                        .unwrap_or_else(|| panic!("{}", line!().to_string()));
+                    if &seg.ident.to_string() != "Option" {
+                        unimplemented!()
+                    }
+                    function_body.stmts.push(account_push_option(
+                        n.ident
+                            .clone()
+                            .unwrap_or_else(|| panic!("{}", line!().to_string())),
+                        writable,
+                        signer,
+                    ))
                 }
-            } else {
-                panic!()
+                _ => {
+                    panic!()
+                }
             }
-        }
-        if contains_slice {
-            ast.generics.params.push(generic);
         }
         let mut gen = proc_macro2::TokenStream::new();
         let function = quote!(
@@ -154,7 +148,28 @@ fn account_push_expr(ident: Ident, writable: bool, signer: bool) -> Stmt {
     } else {
         quote!(accounts_vec.push(AccountMeta::new_readonly(*self.#ident, #signer));).into()
     };
-    syn::parse(t).unwrap()
+    syn::parse(t).unwrap_or_else(|_| panic!("{}", line!().to_string()))
+}
+
+fn account_push_option(ident: Ident, writable: bool, signer: bool) -> Stmt {
+    let t: TokenStream = if writable {
+        quote!(
+            if let Some(k) = self.#ident {
+                accounts_vec.push(AccountMeta::new(*k, #signer));
+            };
+        )
+        .try_into()
+        .unwrap_or_else(|_| panic!("{}", line!().to_string()))
+    } else {
+        quote!(
+            if let Some(k) = self.#ident {
+                accounts_vec.push(AccountMeta::new_readonly(*k, #signer));
+            };
+        )
+        .try_into()
+        .unwrap_or_else(|_| panic!("{}", line!().to_string()))
+    };
+    syn::parse(t).unwrap_or_else(|_| panic!("{}", line!().to_string()))
 }
 fn account_push_expr_slice(ident: Ident, writable: bool, signer: bool) -> Stmt {
     let t: TokenStream = if writable {
@@ -163,14 +178,16 @@ fn account_push_expr_slice(ident: Ident, writable: bool, signer: bool) -> Stmt {
                 accounts_vec.push(AccountMeta::new(*k, #signer));
             }
         )
-        .into()
+        .try_into()
+        .unwrap_or_else(|_| panic!("{}", line!().to_string()))
     } else {
         quote!(
             for k in self.#ident {
                 accounts_vec.push(AccountMeta::new_readonly(*k, #signer));
             }
         )
-        .into()
+        .try_into()
+        .unwrap_or_else(|_| panic!("{}", line!().to_string()))
     };
-    syn::parse(t).unwrap()
+    syn::parse(t).unwrap_or_else(|_| panic!("{}", line!().to_string()))
 }

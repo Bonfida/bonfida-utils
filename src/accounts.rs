@@ -18,30 +18,32 @@ mod tests {
     use bonfida_macros::{BorshSize, InstructionsAccount};
     use borsh::{BorshDeserialize, BorshSerialize};
     use solana_program::pubkey::Pubkey;
+    #[derive(InstructionsAccount, Clone)]
+    pub struct Accounts<'a, T> {
+        #[cons(writable)]
+        a: &'a T,
+        b: &'a T,
+        #[cons(writable)]
+        c: &'a [T],
+        d: &'a [T],
+        #[cons(writable, signer)]
+        e: &'a T,
+        #[cons(signer)]
+        f: &'a T,
+        #[cons(writable, signer)]
+        g: &'a [T],
+        #[cons(signer)]
+        h: &'a [T],
+        #[cons(signer)]
+        i: Option<&'a T>,
+    }
+    #[derive(BorshDeserialize, BorshSerialize, BorshSize, Clone)]
+    pub struct Params {
+        pub match_limit: u64,
+    }
     #[test]
     fn functional_0() {
-        #[derive(InstructionsAccount, Clone)]
-        pub struct Accounts<'a, T> {
-            #[cons(writable)]
-            a: &'a T,
-            b: &'a T,
-            #[cons(writable)]
-            c: &'a [T],
-            d: &'a [T],
-            #[cons(writable, signer)]
-            e: &'a T,
-            #[cons(signer)]
-            f: &'a T,
-            #[cons(writable, signer)]
-            g: &'a [T],
-            #[cons(signer)]
-            h: &'a [T],
-        }
-
-        #[derive(BorshDeserialize, BorshSerialize, BorshSize, Clone)]
-        pub struct Params {
-            pub match_limit: u64,
-        }
+        let k = Pubkey::new_unique();
         let a = Accounts {
             a: &Pubkey::new_unique(),
             b: &Pubkey::new_unique(),
@@ -51,6 +53,7 @@ mod tests {
             f: &Pubkey::new_unique(),
             g: &[Pubkey::new_unique()],
             h: &[Pubkey::new_unique()],
+            i: Some(&k),
         };
         let params = Params { match_limit: 46 };
         let instruction = a.get_instruction(0, params.clone());
@@ -79,6 +82,9 @@ mod tests {
         assert_eq!(instruction.accounts[7].is_writable, false);
         assert_eq!(instruction.accounts[7].is_signer, true);
         assert_eq!(instruction.accounts[7].pubkey, a.h[0]);
+        assert_eq!(instruction.accounts[8].is_writable, false);
+        assert_eq!(instruction.accounts[8].is_signer, true);
+        assert_eq!(instruction.accounts[8].pubkey, *a.i.unwrap());
 
         let mut instruction_data = vec![0];
         instruction_data.extend(&params.try_to_vec().unwrap());
