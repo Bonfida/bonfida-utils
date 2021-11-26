@@ -77,6 +77,16 @@ impl BorshSize for String {
     }
 }
 
+impl<T: BorshSize> BorshSize for Vec<T> {
+    fn borsh_len(&self) -> usize {
+        if self.is_empty() {
+            4
+        } else {
+            4 + self.len() * self[0].borsh_len()
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::BorshSize;
