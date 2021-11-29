@@ -199,7 +199,7 @@ fn type_to_js(ty: &Type) -> String {
                 "u8" | "u16" | "u32" | "i8" | "i16" | "i32" => "number".to_owned(),
                 "u64" | "u128" | "i64" | "i128" => "BN".to_owned(),
                 "String" => "string".to_owned(),
-                _ => panic!("{}", simple_type.to_string()),
+                _ => "number".to_owned(), // We assume this is an enum
             }
         }
         Type::Array(TypeArray {
@@ -237,7 +237,7 @@ fn type_to_borsh(ty: &Type) -> String {
                     simple_type
                 }
                 "String" => "string".to_owned(),
-                _ => panic!(),
+                _ => "u8".to_owned(), // We assume this is an enum
             }
         }
         Type::Array(TypeArray {
