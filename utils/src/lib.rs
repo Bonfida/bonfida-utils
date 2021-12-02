@@ -7,7 +7,6 @@ mod accounts;
 mod borsh_size;
 pub mod checks;
 pub mod fp_math;
-mod pubkey;
 pub use accounts::InstructionsAccount;
-pub use bonfida_macros::{pubkey, BorshSize, InstructionsAccount};
+pub use bonfida_macros::{BorshSize, InstructionsAccount};
 pub use borsh_size::BorshSize;
