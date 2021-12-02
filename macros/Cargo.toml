@@ -3,10 +3,11 @@ name = "bonfida-macros"
 version = "0.1.0"
 authors = ["ellttBen <elliott@bonfida.com>"]
 edition = "2018"
+description = "Bonfida-utils macros"
+license = "MIT"
 
 [lib]
 proc-macro = true
-
 
 [dependencies]
 solana-program = "1.8"
