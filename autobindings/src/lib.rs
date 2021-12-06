@@ -166,7 +166,7 @@ pub fn process_file(module_name: &str, instruction_tag: usize, path: &str) -> St
     statements.push("): TransactionInstruction {".to_owned());
     statements.push("const data = Buffer.from(this.serialize());".to_owned());
     statements.push(
-        "let keys: { pubkey: PublicKey; isSigner: boolean; isWritable: boolean }[] = [];"
+        "let keys: Key[] = [];"
             .to_owned(),
     );
     statements.extend(keys_statements);
