@@ -3,7 +3,7 @@ import BN from "bn.js";
 import { Schema, serialize } from "borsh";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 
-export interface Key {
+export interface AccountKey {
   pubkey: PublicKey;
   isSigner: boolean;
   isWritable: boolean;
