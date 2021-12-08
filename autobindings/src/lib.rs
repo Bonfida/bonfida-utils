@@ -128,6 +128,15 @@ pub fn process_file(module_name: &str, instruction_tag: usize, path: &str) -> St
             keys_statements.push(format!("isWritable: {},", writable));
             keys_statements.push("});".to_owned());
             keys_statements.push("}".to_owned());
+        } else if is_option(&ty) {
+            accounts_statements.push(format!("{}?: PublicKey,", camel_case_ident));
+            keys_statements.push(format!("if (!!{}) {{", camel_case_ident));
+            keys_statements.push("keys.push({".to_owned());
+            keys_statements.push(format!("pubkey: {},", camel_case_ident));
+            keys_statements.push(format!("isSigner: {},", signer));
+            keys_statements.push(format!("isWritable: {},", writable));
+            keys_statements.push("});".to_owned());
+            keys_statements.push("}".to_owned());
         } else {
             accounts_statements.push(format!("{}: PublicKey,", camel_case_ident));
             keys_statements.push("keys.push({".to_owned());
@@ -378,6 +387,17 @@ fn is_slice(ty: &Type) -> bool {
         if let Type::Slice(_) = ty {
             return true;
         }
+    }
+    false
+}
+
+fn is_option(ty: &Type) -> bool {
+    if let Type::Path(TypePath { qself: _, path }) = ty {
+        let seg = path.segments.iter().next().unwrap();
+        if seg.ident != "Option" {
+            unimplemented!()
+        }
+        return true;
     }
     false
 }
