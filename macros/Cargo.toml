@@ -6,6 +6,9 @@ edition = "2018"
 description = "Bonfida-utils macros"
 license = "MIT"
 
+[features]
+instruction_params_casting = []
+
 [lib]
 proc-macro = true
 

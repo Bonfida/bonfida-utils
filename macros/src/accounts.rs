@@ -113,6 +113,7 @@ pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
             }
         }
         let mut gen = proc_macro2::TokenStream::new();
+        #[cfg(not(feature = "instruction_params_casting"))]
         let function = quote!(
             use solana_program::instruction::{AccountMeta, Instruction};
             impl<'a> InstructionsAccount for Accounts<'a, Pubkey> {
@@ -135,6 +136,32 @@ pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
                 }
             }
         );
+        #[cfg(feature = "instruction_params_casting")]
+        let function = quote!(
+            use solana_program::instruction::{AccountMeta, Instruction};
+            use bytemuck::bytes_of;
+            impl<'a> InstructionsAccount for Accounts<'a, Pubkey> {
+                fn get_instruction<P: Pod>(&self, instruction_id: u8, params: P) -> Instruction {
+                    let mut accounts_vec = Vec::new();
+                    let cap = 8 + std::mem::size_of::<P>();
+                    let mut data = Vec::with_capacity(cap);
+                    unsafe {
+                        data.set_len(cap);
+                    }
+                    data[0] = instruction_id;
+
+                    data[8..].copy_from_slice(bytes_of(&params));
+
+                    #function_body
+                    Instruction {
+                        program_id: crate::ID,
+                        accounts: accounts_vec,
+                        data
+                    }
+                }
+            }
+        );
+
         function.to_tokens(&mut gen);
         gen.into()
     } else {
