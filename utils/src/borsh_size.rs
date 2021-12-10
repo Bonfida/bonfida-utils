@@ -106,6 +106,12 @@ mod tests {
         h: [u64; 4],
     }
 
+    #[derive(BorshSerialize, BorshDeserialize, BorshSize)]
+    enum TestEnum {
+        FirstVariant,
+        SecondVariant,
+    }
+
     #[test]
     fn functional() {
         let s = TestStruct {
@@ -119,5 +125,8 @@ mod tests {
             h: [0; 4],
         };
         assert_eq!(s.borsh_len(), 1 + 2 + 4 + 8 + 16 + 32 + 32 + 32);
+
+        let v = TestEnum::FirstVariant;
+        assert_eq!(v.borsh_len(), 1);
     }
 }
