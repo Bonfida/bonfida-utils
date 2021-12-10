@@ -1,9 +1,445 @@
-# bonfida-utils
+<h1 align="center">Bonfida utils</h1>
+<br />
+<p align="center">
+<img width="250" src="https://ftx.com/static/media/fida.ce20eedf.svg"/>
+</p>
+<br />
 
-This repo is a collection of different utilities in use across various Bonfida projects.
+<br />
+<h2 align="center">Table of content</h2>
+<br />
 
-## Repo structure
+1. [Introduction](#introduction)
+2. [Installation](#installation)
+3. [Check functions](#check-functions)
+4. [FP32 and FP64 math functions](#fp32)
+5. [InstructionsAccount trait](#instructions-account)
+6. [BorshSize trait](#borsh-size)
+7. [Project structure](#project-structure)
+8. [Example](#examples)
+
+<br />
+<a name="introduction"></a>
+<h2 align="center">Introduction</h2>
+<br />
+
+This repo is a collection of different utilities in use across various Bonfida projects. The repository has the following structure:
 
 - `utils` Main `bonfida-utils` utilities library
 - `autobindings` CLI tool to autogenerate Typescript bindings for smart contracts written in the specific Bonfida style
 - `macros` Auxiliary crate containing macros in use by the main `bonfida-utils` library
+
+<br />
+<a name="installation"></a>
+<h2 align="center">Installation</h2>
+<br />
+
+This repository is [published on crates.io](https://crates.io/crates/bonfida-utils), in order to use it in your Solana programs add this to your `Cargo.toml` file
+
+```
+bonfida-utils = "0.1.1"
+```
+
+To automatically generate Javascript instructions install the `autobindings` CLI
+
+```
+git clone https://github.com/Bonfida/bonfida-utils.git
+cd bonfida-utils/autobindings
+cargo install --path .
+```
+
+In order to generate instruction bindings automatically your project need to follow a certain structure and derive certain traits that is detailed in the following sections.
+
+<br />
+<a name="check-functions"></a>
+<h2 align="center">Check functions</h2>
+<br />
+
+`bonfida-utils` contains safety verification functions:
+
+- `check_account_key`
+- `check_account_owner`
+- `check_signer`
+
+<br />
+<a name="fp32"></a>
+<h2 align="center">FP32 and FP64 math functions</h2>
+<br />
+
+`bonfida-utils` contains some useful math functions for FP32 and FP64:
+
+- `fp32_div`
+- `fp32_mul`
+- `ifp32_div`
+- `ifp32_mul`
+- `fp64_div`
+- `fp64_mul`
+
+<br/>
+<a name="instructions-account"></a>
+<h2 align="center">InstructionsAccount</h2>
+<br/>
+
+The `Accounts` struct needs to derive the `InstructionsAccount` trait in order to automatically generate instructions in Rust and JS. In order to know which accounts are writable and/or signer you will have to specify constraints (`cons`) for each account of the struct:
+
+1.  For writable accounts: `#[cons(writable)]`
+2.  For signer accounts: `#[cons(signer)]`
+3.  For signer and writable accounts: `#[cons(signer, writable)]`
+
+For example
+
+```rust
+use bonfida_utils::{InstructionsAccount};
+
+#[derive(InstructionsAccount)]
+pub struct Accounts<'a, T> {
+    // Read only account
+    pub read_only_account: &'a T,
+    // This specifies that the account is writable
+    #[cons(writable)]
+    pub writable_account: &'a T,
+    // This specifies that the account is sginer
+    #[cons(signer)]
+    pub signer_account: &'a T,
+    // This specifies that the account is sginer and writable
+    #[cons(signer, writable)]
+    pub signer_and_writable_account: &'a T,
+}
+
+```
+
+To specify accounts that are optional
+
+```rust
+pub struct Accounts<'a, T> {
+    // Writable account that is optional
+    #[cons(writable)]
+    pub referrer_account_opt: Option<&'a T>,
+}
+```
+
+<br/>
+<a name="borsh-size"></a>
+<h2 align="center">BorshSize</h2>
+<br/>
+
+The struct used for the data of the instruction needs to derive the `BorshSize` trait, for example let's take the following struct
+
+```rust
+#[derive(BorshSerialize, BorshDeserialize, BorshSize)]
+pub struct Params {
+    pub position_type: PositionType,
+    pub market_index: u16,
+    pub max_base_qty: u64,
+    pub max_quote_qty: u64,
+    pub limit_price: u64,
+    pub match_limit: u64,
+    pub self_trade_behavior: u8,
+    pub order_type: OrderType,
+    pub number_of_markets: u8,
+}
+```
+
+You might need to implement `BorshSize` yourself for certain types (e.g `enum`), reusing the example above
+
+```rust
+#[derive(BorshDeserialize, BorshSerialize, Debug, PartialEq, FromPrimitive)]
+pub enum OrderType {
+    Limit,
+    ImmediateOrCancel,
+    FillOrKill,
+    PostOnly,
+}
+
+impl BorshSize for OrderType {
+    fn borsh_len(&self) -> usize {
+        1
+    }
+}
+```
+
+<br />
+<a name="project-structure"></a>
+<h2 align="center">Project structure</h2>
+<br />
+
+🚨 The project structure is important:
+
+1. The Solana program must be in a folder called `program`
+2. The JS bindings must be in a folder called `js`
+3. The processor folder needs to contain instructions' logic in separate files. The name of each file needs to be snake case and match the name of the associated function in `instructions.rs`
+4. The instruction enum of `instructions.rs` needs to have camel case names that match the snake case names of the files in `processor`. This is detailed in the example below.
+
+<br />
+<a name="examples"></a>
+<h2 align="center">Examples</h2>
+<br />
+
+Let's have a look at a real life example.
+
+The project structure is as follow
+
+```
+├── program
+│   ├── instructions.rs
+│   ├── processor
+│   │   ├── create_market.rs
+├── js
+│...
+│... The rest is omitted
+```
+
+To simplify we will consider only one instruction `create_market.rs` and only focus on `processor` and `instructions.rs`.
+
+We can see from the project structure that `create_market.rs` is located in the `processor`, let's have a look at the content of the file:
+
+```rust
+use bonfida_utils::{checks::check_signer, BorshSize, InstructionsAccount};
+use borsh::{BorshDeserialize, BorshSerialize};
+// Other imports are omitted
+
+#[derive(InstructionsAccount)]
+pub struct Accounts<'a, T> {
+    #[cons(writable)] // This specifies that the account is writable
+    pub market: &'a T,
+    #[cons(writable)]
+    pub ecosystem: &'a T,
+    pub aob_orderbook: &'a T,
+    pub aob_event_queue: &'a T,
+    pub aob_asks: &'a T,
+    pub aob_bids: &'a T,
+    pub aob_program: &'a T,
+    pub oracle: &'a T,
+    #[cons(signer)] // This specifies that the account is signer
+    pub admin: &'a T,
+    pub vault: &'a T,
+
+    // Constraints (cons) can be combined e.g
+    // #[cons(signer, writable)]
+    // pub some_account: &'a T
+    //
+    // Optional accounts are supported as well
+    // pub discount_account_opt: Option<&'a T>,
+}
+
+// BorshSize might require custom impl e.g for enum
+#[derive(BorshSerialize, BorshDeserialize, BorshSize)]
+pub struct Params {
+    pub market_symbol: String,
+    pub signer_nonce: u8,
+    pub coin_decimals: u8,
+    pub quote_decimals: u8,
+}
+
+impl<'a, 'b: 'a> Accounts<'a, AccountInfo<'b>> {
+    pub fn parse(accounts: &'a [AccountInfo<'b>]) -> Result<Self, ProgramError> {
+        let accounts_iter = &mut accounts.iter();
+
+        let a = Accounts {
+            market: next_account_info(accounts_iter)?,
+            ecosystem: next_account_info(accounts_iter)?,
+            aob_orderbook: next_account_info(accounts_iter)?,
+            aob_event_queue: next_account_info(accounts_iter)?,
+            aob_asks: next_account_info(accounts_iter)?,
+            aob_bids: next_account_info(accounts_iter)?,
+            aob_program: next_account_info(accounts_iter)?,
+            oracle: next_account_info(accounts_iter)?,
+            admin: next_account_info(accounts_iter)?,
+            vault: next_account_info(accounts_iter)?,
+        };
+
+        // Account checks are omitted
+
+        Ok(a)
+    }
+}
+
+pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], params: Params) -> ProgramResult {
+    let accounts = Accounts::parse(accounts)?;
+
+    let Params {
+        market_symbol,
+        signer_nonce,
+        coin_decimals,
+        quote_decimals,
+    } = params;
+
+    // Instruction logic is omitted
+
+    Ok(())
+}
+
+```
+
+We can see that `create_market.rs` is made of 2 important things:
+
+1. `Accounts` struct: it needs to derive the `InstructionsAccount` trait and also specify the constraints for each account of the struct
+2. `Params` struct: it needs to derive the `BorshSize` trait
+
+Now let's have a look at the `instructions.rs` file
+
+```rust
+// Needs to bring it into scope
+use bonfida_utils::InstructionsAccount;
+// Other imports are omitted
+
+#[derive(BorshSerialize, BorshDeserialize)]
+pub enum PerpInstruction {
+    /// Creates a new perpetuals Market based on a currency
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    ///   1. `[writable]` The market account
+    ///   2. `[]` The sysvar clock account
+    ///   2. `[]` The oracle account that will provide the index price for the coin (the current price account in the case of Pyth)
+    ///   3. `[]` The admin account that will be able to add leverages to the market
+    ///   4. `[writable]` The market vault account that will hold the funds, owned by the Market signer account
+    CreateMarket,
+    ///
+    /// ...
+}
+
+// Function name must be the snake case of the instruction enum
+pub fn create_market(
+    accounts: create_market::Accounts<Pubkey>,
+    params: create_market::Params,
+) -> Instruction {
+    accounts.get_instruction(PerpInstruction::CreateMarket as u8, params)
+}
+```
+
+The following names need to match:
+
+1. File name in `processor` (e.g `create_market.rs`), must be in snake case.
+2. Function name in `instructions.rs` (e.g `create_market`), must be in snake case.
+3. Enum name in `instruction.rs` (e.g `CreateMarket`), must be in camel case
+
+In order to generate Javascript instruction run
+
+```
+cargo autobindings
+```
+
+This will generate a file named `raw_instructions.ts` that contains all the instructions of your program
+
+```js
+// This file is auto-generated. DO NOT EDIT
+import BN from "bn.js";
+import { Schema, serialize } from "borsh";
+import { PublicKey, TransactionInstruction } from "@solana/web3.js";
+
+export interface AccountKey {
+  pubkey: PublicKey;
+  isSigner: boolean;
+  isWritable: boolean;
+}
+
+export class createMarketInstruction {
+  tag: number;
+  marketSymbol: string;
+  signerNonce: number;
+  coinDecimals: number;
+  quoteDecimals: number;
+  static schema: Schema = new Map([
+    [
+      createMarketInstruction,
+      {
+        kind: "struct",
+        fields: [
+          ["tag", "u8"],
+          ["marketSymbol", "string"],
+          ["signerNonce", "u8"],
+          ["coinDecimals", "u8"],
+          ["quoteDecimals", "u8"],
+        ],
+      },
+    ],
+  ]);
+  constructor(obj: {
+    marketSymbol: string,
+    signerNonce: number,
+    coinDecimals: number,
+    quoteDecimals: number,
+  }) {
+    this.tag = 0;
+    this.marketSymbol = obj.marketSymbol;
+    this.signerNonce = obj.signerNonce;
+    this.coinDecimals = obj.coinDecimals;
+    this.quoteDecimals = obj.quoteDecimals;
+  }
+  serialize(): Uint8Array {
+    return serialize(createMarketInstruction.schema, this);
+  }
+  getInstruction(
+    programId: PublicKey,
+    market: PublicKey,
+    ecosystem: PublicKey,
+    aobOrderbook: PublicKey,
+    aobEventQueue: PublicKey,
+    aobAsks: PublicKey,
+    aobBids: PublicKey,
+    aobProgram: PublicKey,
+    oracle: PublicKey,
+    admin: PublicKey,
+    vault: PublicKey
+  ): TransactionInstruction {
+    const data = Buffer.from(this.serialize());
+    let keys: AccountKey[] = [];
+    keys.push({
+      pubkey: market,
+      isSigner: false,
+      isWritable: true,
+    });
+    keys.push({
+      pubkey: ecosystem,
+      isSigner: false,
+      isWritable: true,
+    });
+    keys.push({
+      pubkey: aobOrderbook,
+      isSigner: false,
+      isWritable: false,
+    });
+    keys.push({
+      pubkey: aobEventQueue,
+      isSigner: false,
+      isWritable: false,
+    });
+    keys.push({
+      pubkey: aobAsks,
+      isSigner: false,
+      isWritable: false,
+    });
+    keys.push({
+      pubkey: aobBids,
+      isSigner: false,
+      isWritable: false,
+    });
+    keys.push({
+      pubkey: aobProgram,
+      isSigner: false,
+      isWritable: false,
+    });
+    keys.push({
+      pubkey: oracle,
+      isSigner: false,
+      isWritable: false,
+    });
+    keys.push({
+      pubkey: admin,
+      isSigner: true,
+      isWritable: false,
+    });
+    keys.push({
+      pubkey: vault,
+      isSigner: false,
+      isWritable: false,
+    });
+    return new TransactionInstruction({
+      keys,
+      programId,
+      data,
+    });
+  }
+}
+```
