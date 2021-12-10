@@ -218,7 +218,7 @@ fn type_to_js(ty: &Type) -> String {
                     lit: Lit::Int(_),
                 }),
         }) => {
-            let inner_type = type_to_js(elem);
+            let inner_type = type_to_borsh(elem);
             if &inner_type != "u8" {
                 unimplemented!()
             }
