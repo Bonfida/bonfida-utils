@@ -6,15 +6,15 @@
 <br />
 
 <br />
-<h2 align="center">Table of content</h2>
+<h2 align="center">Table of contents</h2>
 <br />
 
 1. [Introduction](#introduction)
 2. [Installation](#installation)
 3. [Check functions](#check-functions)
 4. [FP32 and FP64 math functions](#fp32)
-5. [InstructionsAccount trait](#instructions-account)
-6. [BorshSize trait](#borsh-size)
+5. [`InstructionsAccount` trait](#instructions-account)
+6. [`BorshSize` trait](#borsh-size)
 7. [Project structure](#project-structure)
 8. [Example](#examples)
 
@@ -25,9 +25,9 @@
 
 This repo is a collection of different utilities in use across various Bonfida projects. The repository has the following structure:
 
-- `utils` Main `bonfida-utils` utilities library
-- `autobindings` CLI tool to autogenerate Typescript bindings for smart contracts written in the specific Bonfida style
-- `macros` Auxiliary crate containing macros in use by the main `bonfida-utils` library
+- `utils` : Main `bonfida-utils` utilities library
+- `autobindings` : CLI tool to autogenerate Typescript bindings for smart contracts written in the specific Bonfida style
+- `macros` : Auxiliary crate containing macros in use by the main `bonfida-utils` library
 
 <br />
 <a name="installation"></a>
@@ -37,7 +37,7 @@ This repo is a collection of different utilities in use across various Bonfida p
 This repository is [published on crates.io](https://crates.io/crates/bonfida-utils), in order to use it in your Solana programs add this to your `Cargo.toml` file
 
 ```
-bonfida-utils = "0.1.1"
+bonfida-utils = "0.1"
 ```
 
 To automatically generate Javascript instructions install the `autobindings` CLI
@@ -48,7 +48,7 @@ cd bonfida-utils/autobindings
 cargo install --path .
 ```
 
-In order to generate instruction bindings automatically your project need to follow a certain structure and derive certain traits that is detailed in the following sections.
+In order to generate instruction bindings automatically your project needs to follow a certain structure and derive certain traits that are detailed in the following sections.
 
 <br />
 <a name="check-functions"></a>
@@ -80,7 +80,7 @@ In order to generate instruction bindings automatically your project need to fol
 <h2 align="center">InstructionsAccount</h2>
 <br/>
 
-The `Accounts` struct needs to derive the `InstructionsAccount` trait in order to automatically generate instructions in Rust and JS. In order to know which accounts are writable and/or signer you will have to specify constraints (`cons`) for each account of the struct:
+The `Accounts` struct needs to derive the `InstructionsAccount` trait in order to automatically generate bindings in Rust and JS. In order to know which accounts are writable and/or signer you will have to specify constraints (`cons`) for each account of the struct:
 
 1.  For writable accounts: `#[cons(writable)]`
 2.  For signer accounts: `#[cons(signer)]`
@@ -168,7 +168,8 @@ impl BorshSize for OrderType {
 1. The Solana program must be in a folder called `program`
 2. The JS bindings must be in a folder called `js`
 3. The processor folder needs to contain instructions' logic in separate files. The name of each file needs to be snake case and match the name of the associated function in `instructions.rs`
-4. The instruction enum of `instructions.rs` needs to have camel case names that match the snake case names of the files in `processor`. This is detailed in the example below.
+4. The instruction enum of `instructions.rs` needs to have Pascal case names that match the snake case names of the files in `processor`. This is detailed in the example below.
+5. The instruction enum of `instructions.rs` needs to be the first enum to be defined in that file.
 
 <br />
 <a name="examples"></a>
@@ -191,7 +192,7 @@ The project structure is as follow
 
 To simplify we will consider only one instruction `create_market.rs` and only focus on `processor` and `instructions.rs`.
 
-We can see from the project structure that `create_market.rs` is located in the `processor`, let's have a look at the content of the file:
+We can see from the project structure that `create_market.rs` is located in the `processor` directory, let's have a look at the contents of the file:
 
 ```rust
 use bonfida_utils::{checks::check_signer, BorshSize, InstructionsAccount};
@@ -271,10 +272,10 @@ pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], params: Params) ->
 
 ```
 
-We can see that `create_market.rs` is made of 2 important things:
+We can see that `create_market.rs` contains two important definitions:
 
-1. `Accounts` struct: it needs to derive the `InstructionsAccount` trait and also specify the constraints for each account of the struct
-2. `Params` struct: it needs to derive the `BorshSize` trait
+1. `Accounts` struct: its `InstructionsAccount` trait implementation should be derived, and the constraints for each account of the struct should be specified
+2. `Params` struct: its `BorshSize` trait implementation should be derived
 
 Now let's have a look at the `instructions.rs` file
 
@@ -312,9 +313,9 @@ The following names need to match:
 
 1. File name in `processor` (e.g `create_market.rs`), must be in snake case.
 2. Function name in `instructions.rs` (e.g `create_market`), must be in snake case.
-3. Enum name in `instruction.rs` (e.g `CreateMarket`), must be in camel case
+3. Enum name in `instruction.rs` (e.g `CreateMarket`), must be in Pascal case
 
-In order to generate Javascript instruction run
+In order to generate Javascript instruction bindings run
 
 ```
 cargo autobindings
