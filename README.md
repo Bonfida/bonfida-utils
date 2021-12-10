@@ -140,20 +140,34 @@ pub struct Params {
 }
 ```
 
-You might need to implement `BorshSize` yourself for certain types (e.g `enum`), reusing the example above
+In the above example, `BorshSize` should be derived for `PositionType` and `OrderType` as well. The derive macro can take care of this
+for field-less enums :
+
+```rust
+#[derive(BorshSerialize, BorshDeserialize, BorshSize)]
+pub enum OrderType {
+  Limit,
+  ImmediateOrCancel,
+  FillOrKill,
+  PostOnly
+}
+```
+
+You might need to implement `BorshSize` yourself for certain types (e.g an `enum` with variants containing fields) :
 
 ```rust
 #[derive(BorshDeserialize, BorshSerialize, Debug, PartialEq, FromPrimitive)]
-pub enum OrderType {
-    Limit,
-    ImmediateOrCancel,
-    FillOrKill,
-    PostOnly,
+pub enum ExampleEnum {
+    FirstVariant,
+    SecondVariant(u128),
 }
 
-impl BorshSize for OrderType {
+impl BorshSize for ExampleEnum {
     fn borsh_len(&self) -> usize {
-        1
+        match self {
+          Self::FirstVariant => 1,
+          Self::SecondVariant(n) => 1 + n.borsh_len()
+        }
     }
 }
 ```
