@@ -222,7 +222,7 @@ fn type_to_js(ty: &Type) -> String {
             if &inner_type != "u8" {
                 unimplemented!()
             }
-            "UInt8Array".to_owned()
+            "Uint8Array".to_owned()
         }
         _ => unimplemented!(),
     }
