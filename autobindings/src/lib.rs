@@ -256,9 +256,9 @@ fn type_to_borsh(ty: &Type) -> String {
                     lit: Lit::Int(l),
                 }),
         }) => {
-            let inner_type = type_to_js(elem);
+            let inner_type = type_to_borsh(elem);
             if &inner_type != "u8" {
-                unimplemented!()
+                unimplemented!("{}", inner_type)
             }
             format!("[{}]", l.base10_parse::<u8>().unwrap())
         }
