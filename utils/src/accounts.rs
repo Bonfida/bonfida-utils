@@ -1,19 +1,60 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(feature = "instruction_params_casting")]
-use bytemuck::Pod;
-use solana_program::instruction::Instruction;
+use bytemuck::{bytes_of, Pod};
+use solana_program::{
+    instruction::{AccountMeta, Instruction},
+    pubkey::Pubkey,
+};
 
 use crate::borsh_size::BorshSize;
 
 pub trait InstructionsAccount {
-    #[cfg(not(feature = "instruction_params_casting"))]
+    fn get_accounts_vec(&self) -> Vec<AccountMeta>;
+
     fn get_instruction<P: BorshDeserialize + BorshSerialize + BorshSize>(
         &self,
+        program_id: Pubkey,
         instruction_id: u8,
         params: P,
-    ) -> Instruction;
+    ) -> Instruction {
+        let cap = 1 + params.borsh_len();
+        let mut data = Vec::with_capacity(cap);
+        unsafe {
+            data.set_len(cap);
+        }
+        data[0] = instruction_id;
+        params.serialize(&mut (&mut data[1..])).unwrap();
+
+        let accounts_vec = self.get_accounts_vec();
+        Instruction {
+            program_id,
+            accounts: accounts_vec,
+            data,
+        }
+    }
+
     #[cfg(feature = "instruction_params_casting")]
-    fn get_instruction<P: Pod>(&self, instruction_id: u8, params: P) -> Instruction;
+    fn get_instruction_cast<P: Pod>(
+        &self,
+        program_id: Pubkey,
+        instruction_id: u8,
+        params: P,
+    ) -> Instruction {
+        let cap = 8 + std::mem::size_of::<P>();
+        let mut data = Vec::with_capacity(cap);
+        unsafe {
+            data.set_len(cap);
+        }
+        data[0] = instruction_id;
+
+        data[8..].copy_from_slice(bytes_of(&params));
+
+        Instruction {
+            program_id,
+            accounts: self.get_accounts_vec(),
+            data,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -22,8 +63,10 @@ mod tests {
     use crate::borsh_size::BorshSize;
     use bonfida_macros::{BorshSize, InstructionsAccount};
     use borsh::{BorshDeserialize, BorshSerialize};
-    use bytemuck::{Pod, Zeroable};
     use solana_program::pubkey::Pubkey;
+
+    #[cfg(feature = "instruction_params_casting")]
+    use bytemuck::{Pod, Zeroable};
     #[derive(InstructionsAccount, Clone)]
     pub struct Accounts<'a, T> {
         #[cons(writable)]
@@ -43,7 +86,8 @@ mod tests {
         #[cons(signer)]
         i: Option<&'a T>,
     }
-    #[derive(BorshDeserialize, BorshSerialize, BorshSize, Clone, Zeroable, Pod, Copy)]
+    #[derive(BorshDeserialize, BorshSerialize, BorshSize, Clone, Copy)]
+    #[cfg_attr(feature = "instruction_params_casting", derive(Zeroable, Pod))]
     #[repr(C)]
     pub struct Params {
         pub match_limit: u64,
@@ -64,7 +108,7 @@ mod tests {
             i: Some(&k),
         };
         let params = Params { match_limit: 46 };
-        let instruction = a.get_instruction(0, params);
+        let instruction = a.get_instruction(crate::ID, 0, params);
         assert_eq!(instruction.accounts[0].is_writable, true);
         assert_eq!(instruction.accounts[0].is_signer, false);
         assert_eq!(instruction.accounts[0].pubkey, *a.a);
@@ -93,18 +137,16 @@ mod tests {
         assert_eq!(instruction.accounts[8].is_writable, false);
         assert_eq!(instruction.accounts[8].is_signer, true);
         assert_eq!(instruction.accounts[8].pubkey, *a.i.unwrap());
+        let mut instruction_data = vec![0];
+        instruction_data.extend(&params.try_to_vec().unwrap());
 
-        #[cfg(not(feature = "instruction_params_casting"))]
-        {
-            let mut instruction_data = vec![0];
-            instruction_data.extend(&params.try_to_vec().unwrap());
+        assert_eq!(instruction_data, instruction.data);
 
-            assert_eq!(instruction_data, instruction.data);
-        }
         #[cfg(feature = "instruction_params_casting")]
         {
+            let instruction = a.get_instruction_cast(crate::ID, 0, params);
             let mut instruction_data = [0; 8].to_vec();
-            instruction_data.extend(bytes_of(&params));
+            instruction_data.extend(bytemuck::bytes_of(&params));
 
             assert_eq!(instruction_data, instruction.data);
         }
