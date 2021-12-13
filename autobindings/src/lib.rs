@@ -38,7 +38,7 @@ pub fn generate(instructions_path: &str, instructions_enum_path: &str, output_pa
     }
 
     let mut out_file = File::create(output_path).unwrap();
-    out_file.write_all(&output.as_bytes()).unwrap();
+    out_file.write_all(output.as_bytes()).unwrap();
 }
 
 pub fn parse_instructions_enum(instructions_enum_path: &str) -> HashMap<String, usize> {
@@ -100,7 +100,7 @@ pub fn process_file(module_name: &str, instruction_tag: usize, path: &str) -> St
         let camel_case_ident = snake_to_camel(&ident.as_ref().unwrap().to_string());
         declaration_statements.push(format!("{}: {};", camel_case_ident, type_to_js(&ty)));
         schema_statements.push(format!(
-            "[\"{}\", \"{}\"],",
+            "[\"{}\", {}],",
             camel_case_ident,
             type_to_borsh(&ty)
         ));
@@ -219,10 +219,13 @@ fn type_to_js(ty: &Type) -> String {
                 }),
         }) => {
             let inner_type = type_to_borsh(elem);
-            if &inner_type != "u8" {
-                unimplemented!()
+            match &inner_type as &str {
+                "\"u8\"" | "\"i8\"" => "Uint8Array",
+                "\"u16\"" | "\"i16\"" | "\"u32\"" | "\"i32\"" => "number[]",
+                "\"u64\"" | "\"i64\"" | "\"u128\"" | "\"i128\"" => "BN[]",
+                _ => unimplemented!(),
             }
-            "Uint8Array".to_owned()
+            .to_owned()
         }
         _ => unimplemented!(),
     }
@@ -238,13 +241,13 @@ fn type_to_borsh(ty: &Type) -> String {
             },
         }) => {
             let simple_type = segments.iter().next().unwrap().ident.to_string();
-            match simple_type.as_ref() {
-                "u8" | "u16" | "u32" | "u64" | "u128" | "i8" | "i16" | "i32" | "i64" | "i128" => {
-                    simple_type
-                }
-                "String" => "string".to_owned(),
-                _ => "u8".to_owned(), // We assume this is an enum
-            }
+            let t = match simple_type.as_ref() {
+                "u8" | "u16" | "u32" | "u64" | "u128" => &simple_type,
+                "i8" | "i16" | "i32" | "i64" | "i128" => unimplemented!(),
+                "String" => "string",
+                _ => "u8", // We assume this is an enum
+            };
+            format!("\"{}\"", t)
         }
         Type::Array(TypeArray {
             bracket_token: _,
@@ -257,10 +260,14 @@ fn type_to_borsh(ty: &Type) -> String {
                 }),
         }) => {
             let inner_type = type_to_borsh(elem);
-            if &inner_type != "u8" {
-                unimplemented!("{}", inner_type)
+
+            match &inner_type as &str {
+                "\"u8\"" => format!("[{}]", l.base10_parse::<u8>().unwrap()),
+                "\"u16\"" | "\"u32\"" | "\"u64\"" | "\"u128\"" => {
+                    format!("[{}, {}]", inner_type, l.base10_parse::<u8>().unwrap())
+                }
+                _ => unimplemented!(),
             }
-            format!("[{}]", l.base10_parse::<u8>().unwrap())
         }
         _ => unimplemented!(),
     }
