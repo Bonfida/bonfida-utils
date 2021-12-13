@@ -42,13 +42,9 @@ pub trait InstructionsAccount {
     ) -> Instruction {
         let cap = 8 + std::mem::size_of::<P>();
         let mut data = Vec::with_capacity(cap);
-        unsafe {
-            data.set_len(cap);
-        }
-        data[0] = instruction_id;
-        data[1..8].fill(0);
-
-        data[8..].copy_from_slice(bytes_of(&params));
+        data.push(instruction_id);
+        data.extend([0; 7].iter());
+        data.extend(bytes_of(&params));
 
         Instruction {
             program_id,
