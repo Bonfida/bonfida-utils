@@ -23,7 +23,12 @@ pub trait InstructionsAccount {
             data.set_len(cap);
         }
         data[0] = instruction_id;
-        params.serialize(&mut (&mut data[1..])).unwrap();
+        let mut data_pointer = &mut data[1..];
+        params.serialize(&mut data_pointer).unwrap();
+        // We check that we have written to the whole buffer to ensure that no undefined bytes remain at the end of data.
+        if !data_pointer.is_empty() {
+            panic!()
+        }
 
         let accounts_vec = self.get_accounts_vec();
         Instruction {
