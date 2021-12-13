@@ -1,4 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
+#[cfg(feature = "instruction_params_casting")]
 use bytemuck::Pod;
 use solana_program::instruction::Instruction;
 
@@ -48,6 +49,7 @@ mod tests {
         pub match_limit: u64,
     }
     #[test]
+    #[allow(clippy::bool_assert_comparison)]
     fn functional_0() {
         let k = Pubkey::new_unique();
         let a = Accounts {

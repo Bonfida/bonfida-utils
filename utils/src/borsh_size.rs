@@ -65,6 +65,12 @@ impl BorshSize for i128 {
     }
 }
 
+impl BorshSize for bool {
+    fn borsh_len(&self) -> usize {
+        1
+    }
+}
+
 impl BorshSize for Pubkey {
     fn borsh_len(&self) -> usize {
         32
