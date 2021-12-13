@@ -46,6 +46,7 @@ pub trait InstructionsAccount {
             data.set_len(cap);
         }
         data[0] = instruction_id;
+        data[1..8].fill(0);
 
         data[8..].copy_from_slice(bytes_of(&params));
 
