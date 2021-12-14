@@ -11,12 +11,13 @@
 
 1. [Introduction](#introduction)
 2. [Installation](#installation)
-3. [Check functions](#check-functions)
-4. [FP32 and FP64 math functions](#fp32)
-5. [`InstructionsAccount` trait](#instructions-account)
-6. [`BorshSize` trait](#borsh-size)
-7. [Project structure](#project-structure)
-8. [Example](#examples)
+3. [Used by](#used-by)
+4. [Check functions](#check-functions)
+5. [FP32 and FP64 math functions](#fp32)
+6. [`InstructionsAccount` trait](#instructions-account)
+7. [`BorshSize` trait](#borsh-size)
+8. [Project structure](#project-structure)
+9. [Example](#examples)
 
 <br />
 <a name="introduction"></a>
@@ -28,6 +29,14 @@ This repo is a collection of different utilities in use across various Bonfida p
 - `utils` : Main `bonfida-utils` utilities library
 - `autobindings` : CLI tool to autogenerate Typescript bindings for smart contracts written in the specific Bonfida style
 - `macros` : Auxiliary crate containing macros in use by the main `bonfida-utils` library
+
+<br />
+<a name="used-by"></a>
+<h2 align="center">Used by</h2>
+<br />
+
+- [Serum DEX v4](https://github.com/Bonfida/dex-v4)
+- [Serum Core (asset agnostic orderbook)](https://github.com/Bonfida/agnostic-orderbook)
 
 <br />
 <a name="installation"></a>
