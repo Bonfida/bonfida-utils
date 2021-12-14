@@ -18,7 +18,7 @@ const HEADER: &str = include_str!("templates/template.ts");
 pub fn generate(instructions_path: &str, instructions_enum_path: &str, output_path: &str) {
     let now = Instant::now();
     let path = std::path::Path::new(instructions_path);
-    let instruction_tags = parse_instructions_enum(instructions_enum_path);
+    let (instruction_tags, use_casting) = parse_instructions_enum(instructions_enum_path);
     let directory = std::fs::read_dir(path).unwrap();
     let mut output = get_header();
     for d in directory {
@@ -36,6 +36,7 @@ pub fn generate(instructions_path: &str, instructions_enum_path: &str, output_pa
             &module_name,
             *instruction_tag,
             file.path().to_str().unwrap(),
+            use_casting,
         );
         output.push_str(&s);
     }
@@ -47,11 +48,12 @@ pub fn generate(instructions_path: &str, instructions_enum_path: &str, output_pa
     println!("✨  Done in {:.2?}", elapsed);
 }
 
-pub fn parse_instructions_enum(instructions_enum_path: &str) -> HashMap<String, usize> {
+pub fn parse_instructions_enum(instructions_enum_path: &str) -> (HashMap<String, usize>, bool) {
     let mut f = File::open(instructions_enum_path).unwrap();
     let mut result_map = HashMap::new();
     let mut raw_string = String::new();
     f.read_to_string(&mut raw_string).unwrap();
+    let use_casting = raw_string.contains("get_instruction_cast");
     let ast: syn::File = syn::parse_str(&raw_string).unwrap();
     let instructions_enum = find_enum(&ast);
     let enum_variants = get_enum_variants(instructions_enum);
@@ -68,14 +70,19 @@ pub fn parse_instructions_enum(instructions_enum_path: &str) -> HashMap<String, 
         let module_name = pascal_to_snake(&ident.to_string());
         result_map.insert(module_name, i);
     }
-    result_map
+    (result_map, use_casting)
 }
 
 pub fn get_header() -> String {
     HEADER.to_owned()
 }
 
-pub fn process_file(module_name: &str, instruction_tag: usize, path: &str) -> String {
+pub fn process_file(
+    module_name: &str,
+    instruction_tag: usize,
+    path: &str,
+    use_casting: bool,
+) -> String {
     let mut f = File::open(path).unwrap();
     let mut raw_string = String::new();
     f.read_to_string(&mut raw_string).unwrap();
@@ -88,11 +95,25 @@ pub fn process_file(module_name: &str, instruction_tag: usize, path: &str) -> St
     let accounts_fields = get_struct_fields(accounts_struct_item);
     let mut statements = vec![
         format!("export class {}Instruction {{", snake_to_camel(module_name)),
-        "tag: number;".to_owned(),
+        if use_casting {
+            "tag: BN;"
+        } else {
+            "tag: number;"
+        }
+        .to_owned(),
     ];
     let mut declaration_statements = vec![];
-    let mut assign_statements = vec![format!("this.tag = {}", instruction_tag)];
-    let mut schema_statements = vec!["[\"tag\", \"u8\"],".to_owned()];
+    let mut assign_statements = vec![if use_casting {
+        format!("this.tag = new BN({});", instruction_tag)
+    } else {
+        format!("this.tag = {};", instruction_tag)
+    }];
+    let mut schema_statements = vec![if use_casting {
+        "[\"tag\", \"u64\"],"
+    } else {
+        "[\"tag\", \"u8\"],"
+    }
+    .to_owned()];
     let mut accounts_statements = vec!["programId: PublicKey,".to_owned()];
     let mut keys_statements = vec![];
     for Field {
