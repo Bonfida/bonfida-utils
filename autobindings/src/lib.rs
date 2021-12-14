@@ -11,9 +11,12 @@ use syn::{
     Item, ItemEnum, ItemStruct, Lit, Path, Type, TypeArray, TypePath, TypeReference, Variant,
 };
 
+use std::time::Instant;
+
 const HEADER: &str = include_str!("templates/template.ts");
 
 pub fn generate(instructions_path: &str, instructions_enum_path: &str, output_path: &str) {
+    let now = Instant::now();
     let path = std::path::Path::new(instructions_path);
     let instruction_tags = parse_instructions_enum(instructions_enum_path);
     let directory = std::fs::read_dir(path).unwrap();
@@ -39,6 +42,9 @@ pub fn generate(instructions_path: &str, instructions_enum_path: &str, output_pa
 
     let mut out_file = File::create(output_path).unwrap();
     out_file.write_all(output.as_bytes()).unwrap();
+
+    let elapsed = now.elapsed();
+    println!("✨  Done in {:.2?}", elapsed);
 }
 
 pub fn parse_instructions_enum(instructions_enum_path: &str) -> HashMap<String, usize> {
