@@ -103,11 +103,6 @@ pub fn process_file(
         .to_owned(),
     ];
     let mut declaration_statements = vec![];
-    let mut assign_statements = vec![if use_casting {
-        format!("this.tag = new BN({});", instruction_tag)
-    } else {
-        format!("this.tag = {};", instruction_tag)
-    }];
     let mut schema_statements = vec![if use_casting {
         "[\"tag\", \"u64\"],"
     } else {
@@ -116,6 +111,12 @@ pub fn process_file(
     .to_owned()];
     let mut accounts_statements = vec!["programId: PublicKey,".to_owned()];
     let mut keys_statements = vec![];
+
+    let mut assign_statements = vec![if use_casting {
+        format!("this.tag = new BN({});", instruction_tag)
+    } else {
+        format!("this.tag = {};", instruction_tag)
+    }];
     for Field {
         attrs: _,
         vis: _,
@@ -131,10 +132,17 @@ pub fn process_file(
             camel_case_ident,
             type_to_borsh(&ty)
         ));
-        assign_statements.push(format!(
-            "this.{} = obj.{};",
-            camel_case_ident, camel_case_ident
-        ));
+        if camel_case_ident == "padding" {
+            assign_statements.push(format!(
+                "this.padding = (new Uint8Array({})).fill(0)",
+                padding_len(&ty)
+            ));
+        } else {
+            assign_statements.push(format!(
+                "this.{} = obj.{};",
+                camel_case_ident, camel_case_ident
+            ));
+        }
     }
     for Field {
         attrs,
@@ -185,9 +193,16 @@ pub fn process_file(
     statements.push("},".to_owned());
     statements.push("],".to_owned());
     statements.push("]);".to_owned());
-    statements.push("constructor(obj: {".to_owned());
-    statements.extend(declaration_statements);
-    statements.push("}) {".to_owned());
+    if declaration_statements.is_empty() {
+        statements.push("constructor() {".to_owned());
+    } else {
+        statements.push("constructor(obj: {".to_owned());
+        statements.extend({
+            declaration_statements.retain(|e| !e.contains("padding"));
+            declaration_statements
+        });
+        statements.push("}) {".to_owned());
+    }
     statements.extend(assign_statements);
     statements.push("}".to_owned());
 
@@ -296,6 +311,39 @@ fn type_to_borsh(ty: &Type) -> String {
                 _ => unimplemented!(),
             }
         }
+        _ => unimplemented!(),
+    }
+}
+
+fn padding_len(ty: &Type) -> u8 {
+    match ty {
+        Type::Path(TypePath {
+            qself: _,
+            path: Path {
+                leading_colon: _,
+                segments,
+            },
+        }) => {
+            let simple_type = segments.iter().next().unwrap().ident.to_string();
+            match simple_type.as_ref() {
+                "u8" => 1,
+                "u16" => 2,
+                "u32" => 4,
+                "u64" => 8,
+                "u128" => 16,
+                _ => unimplemented!(), // padding should be of types given above
+            }
+        }
+        Type::Array(TypeArray {
+            bracket_token: _,
+            elem,
+            semi_token: _,
+            len:
+                Expr::Lit(ExprLit {
+                    attrs: _,
+                    lit: Lit::Int(l),
+                }),
+        }) => padding_len(elem) * l.base10_parse::<u8>().unwrap(),
         _ => unimplemented!(),
     }
 }
