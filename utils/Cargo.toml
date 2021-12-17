@@ -14,5 +14,6 @@ instruction_params_casting = ["bonfida-macros/instruction_params_casting", "byte
 [dependencies]
 borsh = "0.9"
 solana-program = "1.8"
+pyth-client = "0.2.2"
 bonfida-macros = "0.2"
 bytemuck = {version = "1.7.2", optional=true}
