@@ -43,7 +43,7 @@ pub fn fp64_mul(a: u64, b_fp64: u64) -> Option<u64> {
         .map(|x| (x >> 64) as u64)
 }
 
-fn safe_downcast(n: u128) -> Option<u64> {
+pub fn safe_downcast(n: u128) -> Option<u64> {
     static BOUND: u128 = u64::MAX as u128;
     if n > BOUND {
         None
