@@ -138,10 +138,7 @@ pub fn process_file(
                 padding_len(&ty)
             ));
         } else {
-            assign_statements.push(format!(
-                "this.{} = obj.{};",
-                camel_case_ident, camel_case_ident
-            ));
+            assign_statements.push(type_assignment(&ty, &camel_case_ident));
         }
     }
     for Field {
@@ -233,6 +230,74 @@ pub fn process_file(
     out_string
 }
 
+fn type_assignment(ty: &Type, camel_case_ident: &str) -> String {
+    match ty {
+        Type::Path(_) => {
+            let simple_type = get_simple_type(ty);
+            match simple_type.as_ref() {
+                "i8" | "i16" | "i32" => {
+                    let bit_width = simple_type[1..].parse::<u8>().unwrap();
+                    format!(
+                        "this.{} = new BN(obj.{}).fromTwos({}).toNumber();",
+                        camel_case_ident, camel_case_ident, bit_width
+                    )
+                }
+                "i64" | "i128" => {
+                    let bit_width = simple_type[1..].parse::<u8>().unwrap();
+                    format!(
+                        "this.{} = obj.{}.fromTwos({});",
+                        camel_case_ident, camel_case_ident, bit_width
+                    )
+                }
+                _ => format!("this.{} = obj.{};", camel_case_ident, camel_case_ident),
+            }
+        }
+        Type::Array(TypeArray {
+            bracket_token: _,
+            elem,
+            semi_token: _,
+            len:
+                Expr::Lit(ExprLit {
+                    attrs: _,
+                    lit: Lit::Int(_),
+                }),
+        }) => {
+            let simple_type = get_simple_type(elem);
+            match &simple_type as &str {
+                "i8" | "i16" | "i32" => {
+                    let bit_width = simple_type[1..].parse::<u8>().unwrap();
+                    format!(
+                        "this.{} = obj.{}.map(o => new BN(o).fromTwos({}).toNumber());",
+                        camel_case_ident, camel_case_ident, bit_width
+                    )
+                }
+                "i64" | "i128" => {
+                    let bit_width = simple_type[1..].parse::<u8>().unwrap();
+                    format!(
+                        "this.{} = obj.{}.map(o => o.fromTwos({}));",
+                        camel_case_ident, camel_case_ident, bit_width
+                    )
+                }
+                _ => format!("this.{} = obj.{};", camel_case_ident, camel_case_ident),
+            }
+        }
+        _ => unimplemented!(),
+    }
+}
+
+fn get_simple_type(ty: &Type) -> String {
+    match ty {
+        Type::Path(TypePath {
+            qself: _,
+            path: Path {
+                leading_colon: _,
+                segments,
+            },
+        }) => segments.iter().next().unwrap().ident.to_string(),
+        _ => unimplemented!(),
+    }
+}
+
 fn type_to_js(ty: &Type) -> String {
     match ty {
         Type::Path(TypePath {
@@ -284,10 +349,14 @@ fn type_to_borsh(ty: &Type) -> String {
         }) => {
             let simple_type = segments.iter().next().unwrap().ident.to_string();
             let t = match simple_type.as_ref() {
-                "u8" | "u16" | "u32" | "u64" | "u128" => &simple_type,
-                "i8" | "i16" | "i32" | "i64" | "i128" => unimplemented!(),
-                "String" => "string",
-                _ => "u8", // We assume this is an enum
+                "u8" | "u16" | "u32" | "u64" | "u128" => simple_type,
+                "i8" | "i16" | "i32" | "i64" | "i128" => {
+                    let mut res = "u".to_owned();
+                    <String as std::fmt::Write>::write_str(&mut res, &simple_type[1..]).unwrap();
+                    res
+                }
+                "String" => "string".to_owned(),
+                _ => "u8".to_owned(), // We assume this is an enum
             };
             format!("\"{}\"", t)
         }
@@ -302,8 +371,10 @@ fn type_to_borsh(ty: &Type) -> String {
                 }),
         }) => {
             let inner_type = type_to_borsh(elem);
+            let mut unsigned_type = "u".to_owned();
+            <String as std::fmt::Write>::write_str(&mut unsigned_type, &inner_type[1..]).unwrap();
 
-            match &inner_type as &str {
+            match &unsigned_type as &str {
                 "\"u8\"" => format!("[{}]", l.base10_parse::<u8>().unwrap()),
                 "\"u16\"" | "\"u32\"" | "\"u64\"" | "\"u128\"" => {
                     format!("[{}, {}]", inner_type, l.base10_parse::<u8>().unwrap())
