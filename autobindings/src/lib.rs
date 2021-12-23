@@ -372,14 +372,21 @@ fn type_to_borsh(ty: &Type) -> String {
         }) => {
             let inner_type = type_to_borsh(elem);
             let mut unsigned_type = "u".to_owned();
-            <String as std::fmt::Write>::write_str(&mut unsigned_type, &inner_type[1..]).unwrap();
+            <String as std::fmt::Write>::write_str(
+                &mut unsigned_type,
+                &inner_type[2..inner_type.len() - 1],
+            )
+            .unwrap();
 
             match &unsigned_type as &str {
-                "\"u8\"" => format!("[{}]", l.base10_parse::<u8>().unwrap()),
-                "\"u16\"" | "\"u32\"" | "\"u64\"" | "\"u128\"" => {
+                "u8" => format!("[{}]", l.base10_parse::<u8>().unwrap()),
+                "u16" | "u32" | "u64" | "u128" => {
                     format!("[{}, {}]", inner_type, l.base10_parse::<u8>().unwrap())
                 }
-                _ => unimplemented!(),
+                _ => {
+                    println!("{:?}", inner_type);
+                    unimplemented!()
+                }
             }
         }
         _ => unimplemented!(),
