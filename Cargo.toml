@@ -1,2 +1,2 @@
 [workspace]
-members = ["utils", "macros", "autobindings"]
+members = ["utils", "macros", "autobindings", "autodoc"]
