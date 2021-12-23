@@ -22,6 +22,6 @@ fn main() {
     generate(
         instructions_path,
         instructions_enum_path,
-        "src/instructions_auto.rs",
+        "src/instruction_auto.rs",
     );
 }
