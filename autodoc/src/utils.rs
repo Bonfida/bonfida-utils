@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Write};
+use std::fmt::Write;
 
 use proc_macro2::{TokenStream, TokenTree};
 use syn::{
@@ -119,7 +119,7 @@ pub fn get_constraints_and_doc(attrs: &[Attribute]) -> (bool, bool, Vec<String>)
                 }
             }
         } else if a.path.is_ident("doc") {
-            let t = if let TokenTree::Literal(l) = a.tokens.clone().into_iter().nth(1).unwrap() {
+            let _t = if let TokenTree::Literal(l) = a.tokens.clone().into_iter().nth(1).unwrap() {
                 l
             } else {
                 panic!()

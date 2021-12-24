@@ -3,9 +3,7 @@ use std::{collections::HashMap, fmt::Write, time::Instant};
 use convert_case::{Case, Casing};
 use proc_macro2::Span;
 use quote::{quote, ToTokens};
-use syn::{
-    punctuated::Punctuated, token::Comma, Field, Item, ItemEnum, PathSegment, Token, Variant,
-};
+use syn::{punctuated::Punctuated, token::Comma, Field, Item, ItemEnum, Token, Variant};
 use utils::{
     boolean_to_emoji, find_struct, get_constraints_and_doc, get_struct_fields, strip_docs,
 };
@@ -33,8 +31,7 @@ pub fn generate(instructions_path: &str, instructions_enum_path: &str, output_pa
             .to_str()
             .unwrap()
             .to_owned();
-        let (mut module_doc, accounts_descriptors) =
-            parse_instruction(file.path().to_str().unwrap());
+        let (module_doc, accounts_descriptors) = parse_instruction(file.path().to_str().unwrap());
         let table = generate_table(&accounts_table_columns, &accounts_descriptors);
         let instruction_documentation =
             [&module_doc as &[String], &["".to_owned()], &table].concat();
@@ -58,7 +55,7 @@ fn process_instructions(
     let path = std::path::Path::new(instructions_path);
     let raw_file = std::fs::read_to_string(path).unwrap();
     let mut file_ast: syn::File = syn::parse_str(&raw_file).unwrap();
-    let mut instructions_enum = find_enum(&mut file_ast);
+    let instructions_enum = find_enum(&mut file_ast);
     let enum_variants = get_enum_variants(instructions_enum);
 
     for Variant {
@@ -115,9 +112,9 @@ fn parse_instruction(instruction_path: &str) -> (Vec<String>, Vec<Vec<String>>) 
         Field {
             attrs,
             vis: _,
-            ident,
+            ident: _,
             colon_token: _,
-            ty,
+            ty: _,
         },
     ) in accounts_fields.iter().enumerate()
     {

@@ -1,4 +1,4 @@
-use cargo_autodoc::{generate, utils::generate_table};
+use cargo_autodoc::generate;
 use clap::{App, Arg};
 
 fn main() {
