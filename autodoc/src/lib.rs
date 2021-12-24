@@ -3,7 +3,10 @@ use std::{collections::HashMap, fmt::Write, time::Instant};
 use convert_case::{Case, Casing};
 use proc_macro2::Span;
 use quote::{quote, ToTokens};
-use syn::{punctuated::Punctuated, token::Comma, Field, Item, ItemEnum, Token, Variant};
+use syn::{
+    punctuated::Punctuated, token::Comma, Field, Item, ItemEnum, Token, Type, TypePath,
+    TypeReference, Variant,
+};
 use utils::{
     boolean_to_emoji, find_struct, get_constraints_and_doc, get_struct_fields, strip_docs,
 };
@@ -11,6 +14,8 @@ use utils::{
 use crate::utils::generate_table;
 
 pub mod utils;
+
+const LITS: &[&str] = &["N", "M", "P", "Q", "R"];
 
 pub fn generate(instructions_path: &str, instructions_enum_path: &str, output_path: &str) {
     let now = Instant::now();
@@ -107,6 +112,7 @@ fn parse_instruction(instruction_path: &str) -> (Vec<String>, Vec<Vec<String>>) 
     let accounts_struct = find_struct("Accounts", &file_ast);
     let accounts_fields = get_struct_fields(accounts_struct);
     let mut accounts_descriptors = Vec::with_capacity(accounts_fields.len());
+    let mut current_lit_offset = 0;
     for (
         f_idx,
         Field {
@@ -114,13 +120,28 @@ fn parse_instruction(instruction_path: &str) -> (Vec<String>, Vec<Vec<String>>) 
             vis: _,
             ident: _,
             colon_token: _,
-            ty: _,
+            ty,
         },
     ) in accounts_fields.iter().enumerate()
     {
         let (writable, signer, doc) = get_constraints_and_doc(attrs);
+        let mut index = if current_lit_offset == 0 {
+            f_idx.to_string()
+        } else {
+            format!("{} + {}", f_idx, LITS[..current_lit_offset].join(" + "))
+        };
+        if is_slice(ty) {
+            current_lit_offset += 1;
+            index
+                .write_str(&format!(
+                    "..{} + {}",
+                    f_idx,
+                    LITS[..current_lit_offset].join(" + "),
+                ))
+                .unwrap();
+        }
         accounts_descriptors.push(vec![
-            f_idx.to_string(),
+            index,
             boolean_to_emoji(writable).to_string(),
             boolean_to_emoji(signer).to_string(),
             doc.into_iter().next().unwrap_or_else(|| "".to_owned()), // TODO: multi-line comments?
@@ -156,4 +177,31 @@ fn get_enum_variants(s: &mut Item) -> &mut Punctuated<Variant, Comma> {
     } else {
         unreachable!()
     }
+}
+
+fn is_slice(ty: &Type) -> bool {
+    if let Type::Reference(TypeReference {
+        and_token: _,
+        lifetime: _,
+        mutability: _,
+        elem,
+    }) = ty
+    {
+        let ty = *elem.clone();
+        if let Type::Slice(_) = ty {
+            return true;
+        }
+    }
+    false
+}
+
+fn is_option(ty: &Type) -> bool {
+    if let Type::Path(TypePath { qself: _, path }) = ty {
+        let seg = path.segments.iter().next().unwrap();
+        if seg.ident != "Option" {
+            unimplemented!()
+        }
+        return true;
+    }
+    false
 }
