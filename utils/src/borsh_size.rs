@@ -83,6 +83,15 @@ impl BorshSize for String {
     }
 }
 
+impl<T: BorshSize> BorshSize for Option<T> {
+    fn borsh_len(&self) -> usize {
+        match self.as_ref() {
+            Some(a) => 1 + a.borsh_len(),
+            None => 1,
+        }
+    }
+}
+
 impl<T: BorshSize> BorshSize for Vec<T> {
     fn borsh_len(&self) -> usize {
         if self.is_empty() {
@@ -110,6 +119,9 @@ mod tests {
         f: Pubkey,
         g: [u8; 32],
         h: [u64; 4],
+        i: Option<String>,
+        j: Option<u64>,
+        k: Option<u64>,
     }
 
     #[derive(BorshSerialize, BorshDeserialize, BorshSize)]
@@ -129,8 +141,14 @@ mod tests {
             f: Pubkey::new_unique(),
             g: [0; 32],
             h: [0; 4],
+            i: Some("this is a test".to_string()),
+            j: Some(0),
+            k: None,
         };
-        assert_eq!(s.borsh_len(), 1 + 2 + 4 + 8 + 16 + 32 + 32 + 32);
+        assert_eq!(
+            s.borsh_len(),
+            1 + 2 + 4 + 8 + 16 + 32 + 32 + 32 + 19 + 9 + 1
+        );
 
         let v = TestEnum::FirstVariant;
         assert_eq!(v.borsh_len(), 1);
