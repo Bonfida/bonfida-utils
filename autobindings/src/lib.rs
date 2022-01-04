@@ -312,6 +312,7 @@ fn type_to_js(ty: &Type) -> String {
                 "u8" | "u16" | "u32" | "i8" | "i16" | "i32" => "number".to_owned(),
                 "u64" | "u128" | "i64" | "i128" => "BN".to_owned(),
                 "String" => "string".to_owned(),
+                "Pubkey" => "Uint8Array".to_owned(),
                 _ => "number".to_owned(), // We assume this is an enum
             }
         }
@@ -356,6 +357,7 @@ fn type_to_borsh(ty: &Type) -> String {
                     res
                 }
                 "String" => "string".to_owned(),
+                "Pubkey" => "[32]".to_owned(),
                 _ => "u8".to_owned(), // We assume this is an enum
             };
             format!("\"{}\"", t)
