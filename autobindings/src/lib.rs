@@ -357,7 +357,7 @@ fn type_to_borsh(ty: &Type) -> String {
                     res
                 }
                 "String" => "string".to_owned(),
-                "Pubkey" => "[32]".to_owned(),
+                "Pubkey" => return "[32]".to_owned(),
                 _ => "u8".to_owned(), // We assume this is an enum
             };
             format!("\"{}\"", t)
