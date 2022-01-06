@@ -7,8 +7,9 @@ use std::{
 use convert_case::{Case, Casing};
 use proc_macro2::TokenTree;
 use syn::{
-    punctuated::Punctuated, token::Comma, Attribute, Expr, ExprLit, Field, Fields, FieldsNamed,
-    Item, ItemEnum, ItemStruct, Lit, Path, Type, TypeArray, TypePath, TypeReference, Variant,
+    punctuated::Punctuated, token::Comma, AngleBracketedGenericArguments, Attribute, Expr, ExprLit,
+    Field, Fields, FieldsNamed, GenericArgument, Item, ItemEnum, ItemStruct, Lit, Path,
+    PathArguments, PathSegment, Type, TypeArray, TypePath, TypeReference, Variant,
 };
 
 use std::time::Instant;
@@ -348,7 +349,8 @@ fn type_to_borsh(ty: &Type) -> String {
                 segments,
             },
         }) => {
-            let simple_type = segments.iter().next().unwrap().ident.to_string();
+            let segment = segments.iter().next().unwrap();
+            let simple_type = segment.ident.to_string();
             let t = match simple_type.as_ref() {
                 "u8" | "u16" | "u32" | "u64" | "u128" => simple_type,
                 "i8" | "i16" | "i32" | "i64" | "i128" => {
@@ -358,6 +360,24 @@ fn type_to_borsh(ty: &Type) -> String {
                 }
                 "String" => "string".to_owned(),
                 "Pubkey" => return "[32]".to_owned(),
+                "Vec" => {
+                    if let PathArguments::AngleBracketed(AngleBracketedGenericArguments {
+                        colon2_token: _,
+                        lt_token: _,
+                        args,
+                        gt_token: _,
+                    }) = &segment.arguments
+                    {
+                        if let GenericArgument::Type(t) = args.first().unwrap() {
+                            let inner_type = type_to_borsh(t);
+                            return format!("[{}]", &type_to_borsh(t)[1..inner_type.len() - 1]);
+                        } else {
+                            unimplemented!()
+                        }
+                    } else {
+                        unreachable!()
+                    };
+                }
                 _ => "u8".to_owned(), // We assume this is an enum
             };
             format!("\"{}\"", t)
