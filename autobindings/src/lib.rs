@@ -308,12 +308,31 @@ fn type_to_js(ty: &Type) -> String {
                 segments,
             },
         }) => {
-            let simple_type = segments.iter().next().unwrap().ident.to_string();
+            let segment = segments.iter().next().unwrap();
+            let simple_type = segment.ident.to_string();
             match simple_type.as_ref() {
                 "u8" | "u16" | "u32" | "i8" | "i16" | "i32" => "number".to_owned(),
                 "u64" | "u128" | "i64" | "i128" => "BN".to_owned(),
                 "String" => "string".to_owned(),
                 "Pubkey" => "Uint8Array".to_owned(),
+                "Vec" => {
+                    if let PathArguments::AngleBracketed(AngleBracketedGenericArguments {
+                        colon2_token: _,
+                        lt_token: _,
+                        args,
+                        gt_token: _,
+                    }) = &segment.arguments
+                    {
+                        if let GenericArgument::Type(t) = args.first().unwrap() {
+                            let inner_type = type_to_js(t);
+                            return format!("{}[]", &inner_type);
+                        } else {
+                            unimplemented!()
+                        }
+                    } else {
+                        unreachable!()
+                    };
+                }
                 _ => "number".to_owned(), // We assume this is an enum
             }
         }
@@ -321,23 +340,23 @@ fn type_to_js(ty: &Type) -> String {
             bracket_token: _,
             elem,
             semi_token: _,
-            len:
-                Expr::Lit(ExprLit {
-                    attrs: _,
-                    lit: Lit::Int(_),
-                }),
+            len: _,
         }) => {
             let inner_type = type_to_borsh(elem);
-            match &inner_type as &str {
-                "\"u8\"" | "\"i8\"" => "Uint8Array",
-                "\"u16\"" | "\"i16\"" | "\"u32\"" | "\"i32\"" => "number[]",
-                "\"u64\"" | "\"i64\"" | "\"u128\"" | "\"i128\"" => "BN[]",
-                _ => unimplemented!(),
-            }
-            .to_owned()
+            array_to_js(&inner_type)
         }
         _ => unimplemented!(),
     }
+}
+
+fn array_to_js(inner_type: &str) -> String {
+    match inner_type as &str {
+        "\"u8\"" | "\"i8\"" => "Uint8Array",
+        "\"u16\"" | "\"i16\"" | "\"u32\"" | "\"i32\"" => "number[]",
+        "\"u64\"" | "\"i64\"" | "\"u128\"" | "\"i128\"" => "BN[]",
+        _ => unimplemented!(),
+    }
+    .to_owned()
 }
 
 fn type_to_borsh(ty: &Type) -> String {
@@ -370,7 +389,7 @@ fn type_to_borsh(ty: &Type) -> String {
                     {
                         if let GenericArgument::Type(t) = args.first().unwrap() {
                             let inner_type = type_to_borsh(t);
-                            return format!("[{}]", strip_quotes(&inner_type));
+                            return format!("[{}]", &inner_type);
                         } else {
                             unimplemented!()
                         }
@@ -582,12 +601,4 @@ fn is_option(ty: &Type) -> bool {
         return true;
     }
     false
-}
-
-fn strip_quotes(s: &str) -> &str {
-    if s.starts_with('"') {
-        &s[1..s.len() - 1]
-    } else {
-        s
-    }
 }
