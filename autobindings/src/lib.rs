@@ -370,7 +370,7 @@ fn type_to_borsh(ty: &Type) -> String {
                     {
                         if let GenericArgument::Type(t) = args.first().unwrap() {
                             let inner_type = type_to_borsh(t);
-                            return format!("[{}]", &type_to_borsh(t)[1..inner_type.len() - 1]);
+                            return format!("[{}]", strip_quotes(&inner_type));
                         } else {
                             unimplemented!()
                         }
@@ -582,4 +582,12 @@ fn is_option(ty: &Type) -> bool {
         return true;
     }
     false
+}
+
+fn strip_quotes(s: &str) -> &str {
+    if s.starts_with('"') {
+        &s[1..s.len() - 1]
+    } else {
+        s
+    }
 }
