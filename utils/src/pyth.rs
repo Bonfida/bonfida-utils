@@ -1,6 +1,6 @@
 use std::convert::TryInto;
 
-use pyth_client::{cast, Price};
+use pyth_client::{cast, Price, PriceStatus};
 use solana_program::{msg, program_error::ProgramError};
 
 use crate::fp_math::safe_downcast;
@@ -11,6 +11,12 @@ pub fn get_oracle_price_fp32(
     quote_decimals: u8,
 ) -> Result<u64, ProgramError> {
     let price_account = cast::<Price>(account_data);
+
+    if matches!(price_account.agg.status, PriceStatus::Trading) {
+        msg!("Pyth price account is not trading. Please retry");
+        return Err(ProgramError::InvalidAccountData);
+    }
+
     let price = ((price_account.agg.price as u128) << 32)
         .checked_div(10u128.pow(price_account.expo.abs().try_into().unwrap()))
         .unwrap();
