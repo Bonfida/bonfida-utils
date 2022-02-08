@@ -12,10 +12,10 @@ pub fn get_oracle_price_fp32(
 ) -> Result<u64, ProgramError> {
     let price_account = cast::<Price>(account_data);
 
-    if matches!(price_account.agg.status, PriceStatus::Trading) {
-        msg!("Pyth price account is not trading. Please retry");
-        return Err(ProgramError::InvalidAccountData);
-    }
+    // if matches!(price_account.agg.status, PriceStatus::Trading) {
+    //     msg!("Pyth price account is not trading. Please retry");
+    //     return Err(ProgramError::InvalidAccountData);
+    // }
 
     let price = ((price_account.agg.price as u128) << 32)
         .checked_div(10u128.pow(price_account.expo.abs().try_into().unwrap()))
