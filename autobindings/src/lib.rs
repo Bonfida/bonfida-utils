@@ -9,7 +9,7 @@ use proc_macro2::TokenTree;
 use syn::{
     punctuated::Punctuated, token::Comma, AngleBracketedGenericArguments, Attribute, Expr, ExprLit,
     Field, Fields, FieldsNamed, GenericArgument, Item, ItemEnum, ItemStruct, Lit, Path,
-    PathArguments, PathSegment, Type, TypeArray, TypePath, TypeReference, Variant,
+    PathArguments, Type, TypeArray, TypePath, TypeReference, Variant,
 };
 
 use std::time::Instant;
@@ -332,6 +332,23 @@ fn type_to_js(ty: &Type) -> String {
                     } else {
                         unreachable!()
                     };
+                }
+                "Option" => {
+                    if let PathArguments::AngleBracketed(AngleBracketedGenericArguments {
+                        colon2_token: _,
+                        lt_token: _,
+                        args,
+                        gt_token: _,
+                    }) = &segment.arguments
+                    {
+                        if let GenericArgument::Type(t) = args.first().unwrap() {
+                            let inner_type = type_to_js(t);
+                            return format!("{} | undefined", inner_type);
+                        } else {
+                            unimplemented!()
+                        }
+                    }
+                    panic!()
                 }
                 _ => "number".to_owned(), // We assume this is an enum
             }
