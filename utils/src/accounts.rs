@@ -19,6 +19,7 @@ pub trait InstructionsAccount {
     ) -> Instruction {
         let cap = 1 + params.borsh_len();
         let mut data = Vec::with_capacity(cap);
+        #[allow(clippy::uninit_vec)]
         unsafe {
             data.set_len(cap);
         }
