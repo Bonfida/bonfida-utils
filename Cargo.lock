@@ -199,10 +199,22 @@ dependencies = [
 ]
 
 [[package]]
-name = "bonfida-utils"
-version = "0.2.2"
+name = "bonfida-macros"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5560c4eb64bcc9c0eb4ad3975155c30cb353a898299dcc47c5400bf7e21c60ff"
 dependencies = [
- "bonfida-macros",
+ "proc-macro2 1.0.34",
+ "quote 1.0.10",
+ "solana-program",
+ "syn 1.0.83",
+]
+
+[[package]]
+name = "bonfida-utils"
+version = "0.2.3"
+dependencies = [
+ "bonfida-macros 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "borsh",
  "bytemuck",
  "pyth-client",
@@ -1720,9 +1732,19 @@ dependencies = [
 
 [[package]]
 name = "pyth-client"
-version = "0.2.2"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44de48029c54ec1ca570786b5baeb906b0fc2409c8e0145585e287ee7a526c72"
+checksum = "f779e98b8c8016d0c1409247a204bd4fcdea8b67ceeef545f04e324d66c49e52"
+dependencies = [
+ "borsh",
+ "borsh-derive",
+ "bytemuck",
+ "num-derive",
+ "num-traits",
+ "serde",
+ "solana-program",
+ "thiserror",
+]
 
 [[package]]
 name = "qstring"
