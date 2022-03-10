@@ -1,6 +1,6 @@
 [package]
 name = "bonfida-utils"
-version = "0.2.4"
+version = "0.2.3"
 authors = ["ellttBen <elliott@bonfida.com>"]
 description = "Various solana program writing utilities in use by Bonfida."
 license = "MIT"
@@ -15,7 +15,7 @@ mock-oracle = []
 [dependencies]
 borsh = "0.9"
 solana-program = "1.8"
-pyth-client = "0.5.0"
+pyth-client = {version="0.5.0", features= ["no-entrypoint"]}
 bonfida-macros = "0.2.3"
 bytemuck = {version = "1.7.2", optional=true}
 
