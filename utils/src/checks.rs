@@ -24,3 +24,13 @@ pub fn check_signer(account: &AccountInfo) -> ProgramResult {
     }
     Ok(())
 }
+
+pub fn check_account_derivation(
+    account: &AccountInfo,
+    seeds: &[&[u8]],
+    program_id: &Pubkey,
+) -> Result<u8, ProgramError> {
+    let (key, nonce) = Pubkey::find_program_address(seeds, program_id);
+    check_account_key(account, &key)?;
+    Ok(nonce)
+}
