@@ -218,6 +218,9 @@ The project structure is as follow
 │   ├── processor
 │   │   ├── create_market.rs
 ├── js
+    ├── src
+├── python
+    ├── src
 │...
 │... The rest is omitted
 ```
@@ -492,4 +495,10 @@ export class createMarketInstruction {
     });
   }
 }
+```
+
+To generate Python bindings run
+
+```
+cargo autobindings --target-language py
 ```
