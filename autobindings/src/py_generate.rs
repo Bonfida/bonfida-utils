@@ -77,7 +77,7 @@ pub fn py_process_file(
         let snake_case_ident = ident.as_ref().unwrap().to_string();
         if is_slice(&ty) {
             get_instr_input_statements.push(format!("{}: List[PublicKey],", snake_case_ident));
-            keys_statements.push(format!("for let k in {}:", snake_case_ident));
+            keys_statements.push(format!("for k in {}:", snake_case_ident));
             keys_statements.push("\t\tkeys.append(AccountMeta(k,".to_owned());
         } else if is_option(&ty) {
             get_instr_input_statements.push(format!("{}: PublicKey = None", snake_case_ident));
