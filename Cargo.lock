@@ -357,8 +357,8 @@ dependencies = [
 name = "cargo-autobindings"
 version = "0.1.0"
 dependencies = [
- "clap",
- "convert_case",
+ "clap 2.34.0",
+ "convert_case 0.4.0",
  "proc-macro2 1.0.34",
  "syn 1.0.83",
 ]
@@ -367,11 +367,22 @@ dependencies = [
 name = "cargo-autodoc"
 version = "0.1.0"
 dependencies = [
- "clap",
- "convert_case",
+ "clap 2.34.0",
+ "convert_case 0.4.0",
  "proc-macro2 1.0.34",
  "quote 1.0.10",
  "rustfmt-wrapper",
+ "syn 1.0.83",
+]
+
+[[package]]
+name = "cargo-autoproject"
+version = "0.1.0"
+dependencies = [
+ "clap 3.1.8",
+ "convert_case 0.5.0",
+ "fs_extra",
+ "proc-macro2 1.0.34",
  "syn 1.0.83",
 ]
 
@@ -413,10 +424,25 @@ dependencies = [
  "ansi_term",
  "atty",
  "bitflags",
- "strsim",
- "textwrap",
+ "strsim 0.8.0",
+ "textwrap 0.11.0",
  "unicode-width",
  "vec_map",
+]
+
+[[package]]
+name = "clap"
+version = "3.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71c47df61d9e16dc010b55dba1952a57d8c215dbb533fd13cdd13369aac73b1c"
+dependencies = [
+ "atty",
+ "bitflags",
+ "indexmap",
+ "os_str_bytes",
+ "strsim 0.10.0",
+ "termcolor",
+ "textwrap 0.15.0",
 ]
 
 [[package]]
@@ -465,6 +491,12 @@ name = "convert_case"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
+
+[[package]]
+name = "convert_case"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fb4a24b1aaf0fd0ce8b45161144d6f42cd91677fd5940fd431183eb023b3a2b8"
 
 [[package]]
 name = "cpufeatures"
@@ -1564,6 +1596,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
+name = "os_str_bytes"
+version = "6.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e22443d1643a904602595ba1cd8f7d896afe56d26712531c5ff73a15b2fbf64"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "ouroboros"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2326,7 +2367,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47d9bf06dafcc2d0c269c64ffa18722fb353d5d87c6aa6a3cc60d1a28c2f1ac4"
 dependencies = [
  "chrono",
- "clap",
+ "clap 2.34.0",
  "rpassword",
  "solana-perf",
  "solana-remote-wallet",
@@ -2360,7 +2401,7 @@ dependencies = [
  "base64 0.13.0",
  "bincode",
  "bs58",
- "clap",
+ "clap 2.34.0",
  "indicatif",
  "jsonrpc-core",
  "log",
@@ -2417,7 +2458,7 @@ checksum = "c6ba6b15e420aac59e7c6bd21368a5a69538d16805570decfd322315700e2d90"
 dependencies = [
  "bincode",
  "byteorder",
- "clap",
+ "clap 2.34.0",
  "log",
  "serde",
  "serde_derive",
@@ -2506,7 +2547,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b7986e4aca1d1110a84e0e417fc26d433a84e516870818612e24f8dcb8794b56"
 dependencies = [
  "bincode",
- "clap",
+ "clap 2.34.0",
  "log",
  "nix",
  "rand 0.7.3",
@@ -2905,6 +2946,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ea5119cdb4c55b55d432abb513a0429384878c15dde60cc77b1c99de1a95a6a"
 
 [[package]]
+name = "strsim"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
+
+[[package]]
 name = "subtle"
 version = "2.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3002,6 +3049,12 @@ checksum = "d326610f408c7a4eb6f51c37c330e496b08506c9457c9d34287ecc38809fb060"
 dependencies = [
  "unicode-width",
 ]
+
+[[package]]
+name = "textwrap"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1141d4d61095b28419e22cb0bbf02755f5e54e0526f97f1e3d1d160e60885fb"
 
 [[package]]
 name = "thiserror"
