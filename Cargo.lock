@@ -376,6 +376,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cargo-autoproject"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "convert_case",
+ "proc-macro2 1.0.34",
+ "syn 1.0.83",
+]
+
+[[package]]
 name = "cc"
 version = "1.0.72"
 source = "registry+https://github.com/rust-lang/crates.io-index"
