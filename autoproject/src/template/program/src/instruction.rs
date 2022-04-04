@@ -18,7 +18,7 @@ pub enum ProgramInstruction {
     ExampleInstr,
 }
 #[allow(missing_docs)]
-pub fn create_mint(
+pub fn example(
     accounts: example_instr::Accounts<Pubkey>,
     params: example_instr::Params,
 ) -> Instruction {
