@@ -59,18 +59,19 @@ pub fn js_process_file(
     } in params_fields
     {
         let camel_case_ident = snake_to_camel(&ident.as_ref().unwrap().to_string());
-        declaration_statements.push(format!("{}: {};", camel_case_ident, type_to_js(&ty)));
         schema_statements.push(format!(
             "[\"{}\", {}],",
             camel_case_ident,
             type_to_borsh_js(&ty)
         ));
         if camel_case_ident == "padding" {
+            declaration_statements.push("padding: Uint8Array;".to_owned());
             assign_statements.push(format!(
                 "this.padding = (new Uint8Array({})).fill(0)",
                 padding_len(&ty)
             ));
         } else {
+            declaration_statements.push(format!("{}: {};", camel_case_ident, type_to_js(&ty)));
             assign_statements.push(js_type_assignment(&ty, &camel_case_ident));
         }
     }
