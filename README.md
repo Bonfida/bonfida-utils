@@ -515,3 +515,10 @@ To generate Python bindings run
 ```
 cargo autobindings --target-language py
 ```
+
+To run the autobindings tests you have to:
+
+- Regenerate the js and python bindings to be sure they are up to date
+- Run `yarn`in the js folder
+- Install ts-node with: `sudo npm install -g ts-node typescript '@types/node'`
+- From the `program`folder, run `cargo autobindings --test true`

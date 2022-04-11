@@ -1,3 +1,4 @@
+use std::fs::remove_file;
 use std::io::Write;
 use std::process::Command;
 use std::{fs::File, io::Read};
@@ -190,6 +191,8 @@ pub fn test(instructions_path: &str) {
             panic!()
         }
     }
+    remove_file("../python/tmp_test.py").unwrap();
+    remove_file("../js/tmp_test.ts").unwrap();
     println!("Success: All tests passing")
 }
 
