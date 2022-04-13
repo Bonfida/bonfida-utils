@@ -1,3 +1,8 @@
 target
 node_modules
 dist
+.vscode
+autoproject/src/template/js/yarn.lock
+autoproject/src/template/js/node_modules
+autoproject/src/template/js/dist
+autoproject/src/template/program/Cargo.lock

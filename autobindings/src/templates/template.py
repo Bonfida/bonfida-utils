@@ -1,4 +1,4 @@
 from typing import List
-from borsh_construct import U8, String, CStruct
+import borsh_construct as borsh
 from solana.transaction import TransactionInstruction, AccountMeta
 from solana.publickey import PublicKey

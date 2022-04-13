@@ -27,7 +27,8 @@
 This repo is a collection of different utilities in use across various Bonfida projects. The repository has the following structure:
 
 - `utils` : Main `bonfida-utils` utilities library
-- `autobindings` : CLI tool to autogenerate Typescript bindings for smart contracts written in the specific Bonfida style
+- `autobindings` : CLI tool to autogenerate Typescript or Python bindings for smart contracts written in the specific Bonfida style
+- `autoproject` : CLI tool to autogenerate an extensive template smart contract
 - `autodoc`: CLI tool to generate a documented `instruction.rs` file
 - `macros` : Auxiliary crate containing macros in use by the main `bonfida-utils` library
 
@@ -50,12 +51,22 @@ This repository is [published on crates.io](https://crates.io/crates/bonfida-uti
 bonfida-utils = "0.1"
 ```
 
-To automatically generate Javascript instructions install the `autobindings` CLI
+To automatically generate Javascript or Python bindings install the `autobindings` CLI
 
 ```
 git clone https://github.com/Bonfida/bonfida-utils.git
 cd bonfida-utils/autobindings
 cargo install --path .
+cd /path/to/your/project
+cargo autobindings --help
+```
+
+To automatically generate a template smart contract, run the `autoproject` CLI
+
+```
+git clone https://github.com/Bonfida/bonfida-utils.git
+cd bonfida-utils/autoproject
+cargo run /path/to/your/new/project-name
 ```
 
 To automatically generate a documentted `instruction.rs` install the `autodoc` CLI:
@@ -63,6 +74,8 @@ To automatically generate a documentted `instruction.rs` install the `autodoc` C
 ```
 cd bonfida-utils/autodoc
 cargo install --path .
+cd /path/to/your/project
+cargo autodoc
 ```
 
 In order to generate instruction bindings automatically your project needs to follow a certain structure and derive certain traits that are detailed in the following sections.
@@ -502,3 +515,10 @@ To generate Python bindings run
 ```
 cargo autobindings --target-language py
 ```
+
+To run the autobindings tests you have to:
+
+- Regenerate the js and python bindings to be sure they are up to date
+- Run `yarn`in the js folder
+- Install ts-node with: `sudo npm install -g ts-node typescript '@types/node'`
+- From the `program`folder, run `cargo autobindings --test true`

@@ -28,13 +28,13 @@ pub fn py_process_file(
     let accounts_fields = get_struct_fields(accounts_struct_item);
     let mut statements = vec![
         format!("class {}Instruction:", snake_to_pascal(module_name)),
-        "\tschema = CStruct(".to_owned(),
+        "\tschema = borsh.CStruct(".to_owned(),
     ];
     let mut ser_input_statements = vec![];
     let mut schema_statements = vec![if use_casting {
-        "\t\t\"tag\" / U64,"
+        "\t\t\"tag\" / borsh.U64,"
     } else {
-        "\t\t\"tag\" / U8,"
+        "\t\t\"tag\" / borsh.U8,"
     }
     .to_owned()];
     let mut get_instr_input_statements = vec!["programId: PublicKey,".to_owned()];
@@ -50,14 +50,16 @@ pub fn py_process_file(
     } in params_fields
     {
         let snake_case_ident = ident.unwrap().to_string();
-        schema_statements.push(format!(
-            "\t\t\"{}\" / {},",
-            snake_case_ident,
-            type_to_borsh_py(&ty)
-        ));
-        if snake_case_ident == "padding" {
+
+        if snake_case_ident == "_padding" {
+            schema_statements.push(format!("\t\t\"padding\" / borsh.U8[{}],", padding_len(&ty)));
             ser_build_statements.push(format!("\t\t\t\"padding\": [0]*{}", padding_len(&ty)));
         } else {
+            schema_statements.push(format!(
+                "\t\t\"{}\" / {},",
+                snake_case_ident.trim_start_matches('_'),
+                type_to_borsh_py(&ty)
+            ));
             ser_input_statements.push(format!("\t\t{}: {},", snake_case_ident, type_to_py(&ty)));
             ser_build_statements.push(format!(
                 "\t\t\t\"{}\": {},",
@@ -77,12 +79,15 @@ pub fn py_process_file(
         let snake_case_ident = ident.as_ref().unwrap().to_string();
         if is_slice(&ty) {
             get_instr_input_statements.push(format!("{}: List[PublicKey],", snake_case_ident));
-            keys_statements.push(format!("for k in {}:", snake_case_ident));
-            keys_statements.push("\t\tkeys.append(AccountMeta(k,".to_owned());
+            keys_statements.push(format!("\t\tfor k in {}:", snake_case_ident));
+            keys_statements.push("\t\t\tkeys.append(AccountMeta(k,".to_owned());
         } else if is_option(&ty) {
-            get_instr_input_statements.push(format!("{}: PublicKey = None", snake_case_ident));
-            keys_statements.push(format!("if ({} is not None):", snake_case_ident));
-            keys_statements.push(format!("\t\tkeys.append(AccountMeta({},", snake_case_ident,));
+            get_instr_input_statements.push(format!("\t\t{}: PublicKey = None,", snake_case_ident));
+            keys_statements.push(format!("\t\tif ({} is not None):", snake_case_ident));
+            keys_statements.push(format!(
+                "\t\t\tkeys.append(AccountMeta({},",
+                snake_case_ident,
+            ));
         } else {
             get_instr_input_statements.push(format!("{}: PublicKey,", snake_case_ident));
             keys_statements.push(format!("\t\tkeys.append(AccountMeta({},", snake_case_ident,));
@@ -113,8 +118,8 @@ pub fn py_process_file(
     statements.push("\t\t})".to_owned());
 
     statements.push("\tdef getInstruction(self,".to_owned());
-    statements.extend(get_instr_input_statements);
     statements.extend(ser_input_statements);
+    statements.extend(get_instr_input_statements);
     statements.push(") -> TransactionInstruction:".to_owned());
     statements.push("\t\tdata = self.serialize(".to_owned());
     statements.extend(
@@ -135,7 +140,7 @@ pub fn py_process_file(
     out_string
 }
 
-fn type_to_py(ty: &Type) -> String {
+pub(crate) fn type_to_py(ty: &Type) -> String {
     match ty {
         Type::Path(TypePath {
             qself: _,
@@ -151,7 +156,7 @@ fn type_to_py(ty: &Type) -> String {
                     "int".to_owned()
                 }
                 "String" => "str".to_owned(),
-                "Pubkey" => "PublicKey".to_owned(),
+                "Pubkey" => "List[int]".to_owned(),
                 "Vec" => {
                     if let PathArguments::AngleBracketed(AngleBracketedGenericArguments {
                         colon2_token: _,
@@ -179,7 +184,7 @@ fn type_to_py(ty: &Type) -> String {
             semi_token: _,
             len: _,
         }) => {
-            let inner_type = type_to_borsh_py(elem);
+            let inner_type = type_to_py(elem);
             format!("List[{}]", inner_type)
         }
         _ => unimplemented!(),
@@ -199,10 +204,10 @@ fn type_to_borsh_py(ty: &Type) -> String {
             let simple_type = segment.ident.to_string();
             match simple_type.as_ref() {
                 "u8" | "u16" | "u32" | "u64" | "u128" | "i8" | "i16" | "i32" | "i64" | "i128" => {
-                    lower_to_upper(&simple_type)
+                    "borsh.".to_owned() + lower_to_upper(&simple_type).as_str()
                 }
-                "String" => simple_type,
-                "Pubkey" => "U8[32]".to_owned(),
+                "String" => "borsh.String".to_owned(),
+                "Pubkey" => "borsh.U8[32]".to_owned(),
                 "Vec" => {
                     if let PathArguments::AngleBracketed(AngleBracketedGenericArguments {
                         colon2_token: _,
@@ -213,7 +218,7 @@ fn type_to_borsh_py(ty: &Type) -> String {
                     {
                         if let GenericArgument::Type(t) = args.first().unwrap() {
                             let inner_type = type_to_borsh_py(t);
-                            return format!("Vec({})", &inner_type);
+                            return format!("borsh.Vec({})", &inner_type);
                         } else {
                             unimplemented!()
                         }
@@ -221,7 +226,7 @@ fn type_to_borsh_py(ty: &Type) -> String {
                         unreachable!()
                     };
                 }
-                _ => "U8".to_owned(), // We assume this is an enum
+                _ => "borsh.U8".to_owned(), // We assume this is an enum
             }
         }
         Type::Array(TypeArray {
@@ -235,24 +240,7 @@ fn type_to_borsh_py(ty: &Type) -> String {
                 }),
         }) => {
             let inner_type = type_to_borsh_py(elem);
-            let mut unsigned_type = "u".to_owned();
-            <String as std::fmt::Write>::write_str(
-                &mut unsigned_type,
-                &inner_type[2..inner_type.len() - 1],
-            )
-            .unwrap();
-
-            //TODO
-            match &unsigned_type as &str {
-                "u8" => format!("[{}]", l.base10_parse::<u8>().unwrap()),
-                "u16" | "u32" | "u64" | "u128" => {
-                    format!("[{}, {}]", inner_type, l.base10_parse::<u8>().unwrap())
-                }
-                _ => {
-                    println!("{:?}", inner_type);
-                    unimplemented!()
-                }
-            }
+            format!("{}[{}]", inner_type, l.base10_parse::<u8>().unwrap())
         }
         _ => unimplemented!(),
     }

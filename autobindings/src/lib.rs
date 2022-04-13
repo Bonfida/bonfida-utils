@@ -1,6 +1,5 @@
 use convert_case::{Case, Casing};
 use proc_macro2::TokenTree;
-use std::time::Instant;
 use std::{
     collections::HashMap,
     fs::File,
@@ -16,6 +15,7 @@ use crate::py_generate::py_process_file;
 
 pub mod js_generate;
 pub mod py_generate;
+pub mod test;
 
 #[derive(Debug, Clone, Copy)]
 pub enum TargetLang {
@@ -29,7 +29,6 @@ pub fn generate(
     target_lang: TargetLang,
     output_path: &str,
 ) {
-    let now = Instant::now();
     let path = std::path::Path::new(instructions_path);
     let (instruction_tags, use_casting) = parse_instructions_enum(instructions_enum_path);
     let directory = std::fs::read_dir(path).unwrap();
@@ -64,9 +63,6 @@ pub fn generate(
 
     let mut out_file = File::create(output_path).unwrap();
     out_file.write_all(output.as_bytes()).unwrap();
-
-    let elapsed = now.elapsed();
-    println!("✨  Done in {:.2?}", elapsed);
 }
 
 pub fn parse_instructions_enum(instructions_enum_path: &str) -> (HashMap<String, usize>, bool) {
