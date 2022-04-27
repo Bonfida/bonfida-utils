@@ -217,7 +217,11 @@ dependencies = [
  "bonfida-macros 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "borsh",
  "bytemuck",
+ "lazy_static",
  "pyth-client",
+ "regex",
+ "serde",
+ "serde_json",
  "solana-client",
  "solana-program",
 ]
@@ -387,6 +391,16 @@ dependencies = [
  "fs_extra",
  "proc-macro2 1.0.34",
  "syn 1.0.83",
+]
+
+[[package]]
+name = "cargo-benchviz"
+version = "0.1.0"
+dependencies = [
+ "gnuplot",
+ "regex",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -1030,6 +1044,15 @@ name = "gimli"
 version = "0.26.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78cc372d058dcf6d5ecd98510e7fbc9e5aec4d21de70f65fea8fecebcd881bd4"
+
+[[package]]
+name = "gnuplot"
+version = "0.0.37"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8de437277a7ec10de5f34e3147c7da4c6d8b279c5d8ae1e33e842fd9432bb0f3"
+dependencies = [
+ "byteorder",
+]
 
 [[package]]
 name = "h2"
@@ -2172,9 +2195,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.78"
+version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d23c1ba4cf0efd44be32017709280b32d1cea5c3f1275c3b6d9e8bc54f758085"
+checksum = "8e8d9fa5c3b304765ce1fd9c4c8a3de2c8db365a5b91be52f186efc675681d95"
 dependencies = [
  "itoa 1.0.1",
  "ryu",
