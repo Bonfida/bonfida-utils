@@ -212,7 +212,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-utils"
-version = "0.2.7"
+version = "0.2.9"
 dependencies = [
  "bonfida-macros 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "borsh",

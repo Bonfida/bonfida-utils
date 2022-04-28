@@ -108,6 +108,8 @@ impl BenchRunner {
     pub fn run(&self, arguments: &[String]) -> Vec<u64> {
         let mut command = std::process::Command::new("cargo");
         command.arg("test-bpf");
+        command.arg("--features");
+        command.arg("benchmarking");
         command.arg("--test");
         command.arg(self.test_name);
         for (i, v) in arguments.iter().enumerate() {
