@@ -212,7 +212,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-utils"
-version = "0.2.9"
+version = "0.2.10"
 dependencies = [
  "bonfida-macros 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "borsh",
@@ -397,6 +397,7 @@ dependencies = [
 name = "cargo-benchviz"
 version = "0.1.0"
 dependencies = [
+ "bonfida-utils",
  "gnuplot",
  "regex",
  "serde",

@@ -10,3 +10,4 @@ gnuplot = "0.0.37"
 serde = {version = "1", features = ["derive"]}
 serde_json = "1"
 regex = "1"
+bonfida-utils = {path = "../utils", features = ["benchmarking"]}

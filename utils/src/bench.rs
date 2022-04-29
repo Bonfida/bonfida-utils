@@ -6,10 +6,10 @@ use std::{
 
 use lazy_static::lazy_static;
 use regex::Regex;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use solana_program::pubkey::Pubkey;
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Measures {
     pub test_name: String,
     pub commit_id: String,
