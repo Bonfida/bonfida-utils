@@ -4,7 +4,7 @@ pub const FP_32_ONE: u64 = 1 << 32;
 pub fn fp32_div(a: u64, b_fp32: u64) -> Option<u64> {
     ((a as u128) << 32)
         .checked_div(b_fp32 as u128)
-        .map(|x| x as u64)
+        .and_then(safe_downcast)
 }
 
 /// a is fp0, b is fp32 and result is a*b fp0
@@ -18,6 +18,7 @@ pub fn fp32_mul(a: u64, b_fp32: u64) -> Option<u64> {
 pub fn ifp32_div(a: i64, b_fp32: u64) -> Option<i64> {
     ((a.abs() as u128) << 32)
         .checked_div(b_fp32 as u128)
+        .and_then(safe_downcast)
         .map(|x| a.signum() * (x as i64))
 }
 
@@ -33,14 +34,15 @@ pub fn ifp32_mul(a: i64, b_fp32: u64) -> Option<i64> {
 pub fn fp64_div(a: u64, b_fp64: u64) -> Option<u64> {
     ((a as u128) << 64)
         .checked_div(b_fp64 as u128)
-        .map(|x| x as u64)
+        .and_then(safe_downcast)
 }
 
 /// a is fp0, b is fp64 and result is a*b fp0
 pub fn fp64_mul(a: u64, b_fp64: u64) -> Option<u64> {
     (a as u128)
         .checked_mul(b_fp64 as u128)
-        .map(|x| (x >> 64) as u64)
+        .map(|x| (x >> 64))
+        .and_then(safe_downcast)
 }
 
 pub fn safe_downcast(n: u128) -> Option<u64> {
