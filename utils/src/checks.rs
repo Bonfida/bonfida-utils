@@ -1,6 +1,10 @@
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
+    account_info::AccountInfo,
+    entrypoint::ProgramResult,
+    msg,
+    program_error::ProgramError,
     pubkey::Pubkey,
+    sysvar::{rent::Rent, Sysvar},
 };
 
 // Safety verification functions
@@ -36,4 +40,12 @@ pub fn check_account_derivation(
     let (key, nonce) = Pubkey::find_program_address(seeds, program_id);
     check_account_key(account, &key)?;
     Ok(nonce)
+}
+
+pub fn check_rent_exempt(account: &AccountInfo) -> ProgramResult {
+    let rent = Rent::get()?;
+    if !rent.is_exempt(account.lamports(), account.data_len()) {
+        return Err(ProgramError::AccountNotRentExempt);
+    }
+    Ok(())
 }
