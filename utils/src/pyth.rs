@@ -2,7 +2,7 @@ use crate::fp_math::safe_downcast;
 use pyth_sdk_solana::{
     state::{
         load_mapping_account, load_price_account, load_product_account, CorpAction, PriceStatus,
-        PriceType, ProductAccount,
+        PriceType,
     },
     Price,
 };
@@ -108,7 +108,7 @@ pub fn test_sol() {
     let rpc_client = RpcClient::new("https://api.mainnet-beta.solana.com".to_string());
 
     let prod_data = rpc_client.get_account_data(&pyth_sol_prod_acc).unwrap();
-    let symbol = get_market_symbol(load_product_account(&prod_data).unwrap()).unwrap();
+    let symbol = get_market_symbol(&prod_data).unwrap();
     let price_data = rpc_client.get_account_data(&pyth_sol_price_acc).unwrap();
     let price = get_oracle_price_fp32(&price_data, 6, 6).unwrap();
     println!("Found: '{}' FP32 Price: {}", symbol, price);
