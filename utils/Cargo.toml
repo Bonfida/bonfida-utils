@@ -1,6 +1,6 @@
 [package]
 name = "bonfida-utils"
-version = "0.2.10"
+version = "0.2.11"
 authors = ["ellttBen <elliott@bonfida.com>"]
 description = "Various solana program writing utilities in use by Bonfida."
 license = "MIT"
