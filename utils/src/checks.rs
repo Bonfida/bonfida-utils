@@ -3,9 +3,11 @@ use solana_program::{
     entrypoint::ProgramResult,
     msg,
     program_error::ProgramError,
+    program_pack::Pack,
     pubkey::Pubkey,
     sysvar::{rent::Rent, Sysvar},
 };
+use spl_token::state::Account;
 
 // Safety verification functions
 pub fn check_account_key(account: &AccountInfo, key: &Pubkey) -> ProgramResult {
@@ -48,4 +50,21 @@ pub fn check_rent_exempt(account: &AccountInfo) -> ProgramResult {
         return Err(ProgramError::AccountNotRentExempt);
     }
     Ok(())
+}
+
+pub fn check_token_account_owner(
+    account: &AccountInfo,
+    owner: &Pubkey,
+) -> Result<Account, ProgramError> {
+    check_account_owner(account, &spl_token::ID)?;
+    let token_account = Account::unpack_from_slice(&account.data.borrow())?;
+    if token_account.owner != *owner {
+        msg!(
+            "Wrong account owner: {} should be {}",
+            token_account.owner,
+            owner
+        );
+        return Err(ProgramError::InvalidArgument);
+    }
+    Ok(token_account)
 }

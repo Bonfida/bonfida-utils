@@ -267,6 +267,7 @@ dependencies = [
  "serde_json",
  "solana-client",
  "solana-program",
+ "spl-token",
 ]
 
 [[package]]
