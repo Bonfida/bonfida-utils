@@ -1,12 +1,11 @@
+use crate::borsh_size::BorshSize;
 use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(feature = "instruction_params_casting")]
-use bytemuck::{bytes_of, Pod};
+use bytemuck::{bytes_of, NoUninit};
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };
-
-use crate::borsh_size::BorshSize;
 
 pub trait InstructionsAccount {
     fn get_accounts_vec(&self) -> Vec<AccountMeta>;
@@ -40,7 +39,7 @@ pub trait InstructionsAccount {
     }
 
     #[cfg(feature = "instruction_params_casting")]
-    fn get_instruction_cast<P: Pod>(
+    fn get_instruction_cast<P: NoUninit>(
         &self,
         program_id: Pubkey,
         instruction_id: u8,
