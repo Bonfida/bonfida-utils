@@ -275,13 +275,13 @@ fn type_to_test_input(ty: &Type, rng: &mut ThreadRng, array: bool) -> Vec<TestIn
                                 js: "],".to_owned(),
                                 py: "],".to_owned(),
                             });
-                            return inputs;
+                            inputs
                         } else {
                             unimplemented!()
                         }
                     } else {
                         unreachable!()
-                    };
+                    }
                 }
                 _ => {
                     let input = rng.gen_range(0..255).to_string() + ",";

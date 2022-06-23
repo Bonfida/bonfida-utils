@@ -3,11 +3,14 @@ use convert_case::{Case, Casing};
 use fs_extra::dir::get_dir_content;
 use include_dir::{include_dir, Dir};
 use path_absolutize::Absolutize;
-use std::fs::OpenOptions;
-use std::io::Write;
-use std::path::Path;
-use std::str::FromStr;
-use std::time::Instant;
+
+use std::{
+    fs::{self, OpenOptions},
+    io::Write,
+    path::Path,
+    str::FromStr,
+    time::Instant,
+};
 
 const CASE_STR_ID: [&str; 4] = [
     "TOBEREPLACEDBY_UPPERSNAKE",
@@ -48,7 +51,7 @@ pub fn process(matches: &ArgMatches) {
 pub fn generate(project_name: &str, project_path: &str) {
     let now = Instant::now();
 
-    let mut project_dir = std::path::PathBuf::from_str(&project_path).unwrap();
+    let mut project_dir = std::path::PathBuf::from_str(project_path).unwrap();
     project_dir.push(project_name);
 
     let project_dir = project_dir.absolutize().unwrap();
@@ -96,20 +99,4 @@ fn get_case_from_id(id_str: &str) -> Case {
         "TOBEREPLACEDBY_PASCAL" => Case::Pascal,
         _ => panic!(),
     }
-}
-
-use std::{fs, io};
-
-fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
-    fs::create_dir_all(&dst)?;
-    for entry in fs::read_dir(src)? {
-        let entry = entry?;
-        let ty = entry.file_type()?;
-        if ty.is_dir() {
-            copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name()))?;
-        } else {
-            fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
-        }
-    }
-    Ok(())
 }

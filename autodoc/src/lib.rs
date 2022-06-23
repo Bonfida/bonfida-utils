@@ -223,7 +223,7 @@ fn is_slice(ty: &Type) -> bool {
     false
 }
 
-fn is_option(ty: &Type) -> bool {
+fn _is_option(ty: &Type) -> bool {
     if let Type::Path(TypePath { qself: _, path }) = ty {
         let seg = path.segments.iter().next().unwrap();
         if seg.ident != "Option" {
