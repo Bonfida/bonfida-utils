@@ -1,5 +1,5 @@
 [package]
-name = "cargo-autobindings"
+name = "autobindings"
 description = "Utility to generate JavaScript and python bindings for Solana smart contracts following the Bonfida code conventions"
 license = "MIT"
 version = "0.1.0"
@@ -9,9 +9,9 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = "2.33"
+clap = {version = "3.2.6", features = ["cargo"]}
 syn = {version = "1.0", features = ["full", "extra-traits"]}
-convert_case = "0.4.0"
+convert_case = "0.5.0"
 rand = "0.8.5"
 proc-macro2 = "1.0"
 hex = "0.4.3"

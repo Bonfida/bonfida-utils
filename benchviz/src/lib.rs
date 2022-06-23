@@ -4,9 +4,16 @@ use std::{
 };
 
 use bonfida_utils::bench::Measures;
+use clap::{crate_name, crate_version, ArgMatches, Command};
 use gnuplot::{Figure, PlotOption};
 use regex::Regex;
-fn main() {
+
+pub fn command() -> Command<'static> {
+    Command::new(crate_name!())
+        .version(crate_version!())
+        .about("Generate comparative benchmarking graphs")
+}
+pub fn process(_matches: &ArgMatches) {
     let current_directory = std::env::current_dir().unwrap();
     let results_directory = current_directory.join("benchmark_results");
     if !results_directory.is_dir() {

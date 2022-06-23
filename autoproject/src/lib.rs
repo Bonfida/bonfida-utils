@@ -1,8 +1,11 @@
+use clap::{crate_name, crate_version, Arg, ArgMatches, Command};
 use convert_case::{Case, Casing};
 use fs_extra::dir::get_dir_content;
+use include_dir::{include_dir, Dir};
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::Path;
+use std::str::FromStr;
 use std::time::Instant;
 
 const CASE_STR_ID: [&str; 4] = [
@@ -12,17 +15,50 @@ const CASE_STR_ID: [&str; 4] = [
     "TOBEREPLACEDBY_PASCAL",
 ];
 
-pub fn generate(project_path: &str) {
+const TEMPLATE: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/src/template");
+
+pub fn command() -> Command<'static> {
+    Command::new(crate_name!())
+        .version(crate_version!())
+        .author("Bonfida")
+        .about("Initialize a new project")
+        .allow_external_subcommands(true)
+        .arg(
+            Arg::new("name")
+                .required(true)
+                .takes_value(true)
+                .help("The new project's name"),
+        )
+        .arg(
+            Arg::new("new-project-path")
+                .long("path")
+                .short('p')
+                .takes_value(true)
+                .required(false)
+                .help("Path in which to create the new project. Default to current directory."),
+        )
+}
+
+pub fn process(matches: &ArgMatches) {
+    let project_name = matches.value_of("name").unwrap();
+    let project_path = matches.value_of("new-project-path").unwrap();
+    generate(project_name, project_path);
+}
+
+pub fn generate(project_name: &str, project_path: &str) {
     let now = Instant::now();
 
-    let project_dir = std::path::Path::new(&project_path);
-    let template_path = std::path::Path::new("./src/template/");
+    let mut project_dir = std::path::PathBuf::from_str(&project_path).unwrap();
+    project_dir.push(project_name);
 
-    copy_dir_all(template_path, project_dir).unwrap();
+    println!("{:?}", project_dir);
+
+    // return;
+
+    TEMPLATE.extract(&project_dir).unwrap();
 
     let directory = get_dir_content(project_dir).unwrap().files;
 
-    let project_name = project_dir.file_name().unwrap().to_str().unwrap();
     for file_path_str in directory {
         let file_path = Path::new(&file_path_str);
         let mut raw_file = std::fs::read_to_string(&file_path).unwrap();

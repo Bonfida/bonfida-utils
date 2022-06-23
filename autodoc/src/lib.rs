@@ -1,5 +1,6 @@
 use std::{collections::HashMap, fmt::Write, time::Instant};
 
+use clap::{crate_name, Arg, ArgMatches, Command};
 use convert_case::{Case, Casing};
 use proc_macro2::Span;
 use quote::{quote, ToTokens};
@@ -16,6 +17,33 @@ use crate::utils::generate_table;
 pub mod utils;
 
 const LITS: &[&str] = &["N", "M", "P", "Q", "R"];
+
+pub fn command() -> Command<'static> {
+    Command::new(crate_name!())
+        .version("0.1")
+        .author("Bonfida")
+        .about("Autogenerate Rust documentation for instructions")
+        .arg(
+            Arg::with_name("instructions_path")
+                .takes_value(true)
+                .default_value("src/processor"),
+        )
+        .arg(
+            Arg::with_name("instructions_enum_path")
+                .takes_value(true)
+                .default_value("src/instruction.rs"),
+        )
+}
+
+pub fn process(matches: &ArgMatches) {
+    let instructions_path = matches.value_of("instructions_path").unwrap();
+    let instructions_enum_path = matches.value_of("instructions_enum_path").unwrap();
+    generate(
+        instructions_path,
+        instructions_enum_path,
+        "src/instruction_auto.rs",
+    );
+}
 
 pub fn generate(instructions_path: &str, instructions_enum_path: &str, output_path: &str) {
     let now = Instant::now();
