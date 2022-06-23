@@ -2,6 +2,7 @@ use clap::{crate_name, crate_version, Arg, ArgMatches, Command};
 use convert_case::{Case, Casing};
 use fs_extra::dir::get_dir_content;
 use include_dir::{include_dir, Dir};
+use path_absolutize::Absolutize;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::Path;
@@ -22,7 +23,6 @@ pub fn command() -> Command<'static> {
         .version(crate_version!())
         .author("Bonfida")
         .about("Initialize a new project")
-        .allow_external_subcommands(true)
         .arg(
             Arg::new("name")
                 .required(true)
@@ -41,7 +41,7 @@ pub fn command() -> Command<'static> {
 
 pub fn process(matches: &ArgMatches) {
     let project_name = matches.value_of("name").unwrap();
-    let project_path = matches.value_of("new-project-path").unwrap();
+    let project_path = matches.value_of("new-project-path").unwrap_or(".");
     generate(project_name, project_path);
 }
 
@@ -51,9 +51,13 @@ pub fn generate(project_name: &str, project_path: &str) {
     let mut project_dir = std::path::PathBuf::from_str(&project_path).unwrap();
     project_dir.push(project_name);
 
+    let project_dir = project_dir.absolutize().unwrap();
+
     println!("{:?}", project_dir);
 
     // return;
+
+    fs::create_dir_all(&project_dir).unwrap();
 
     TEMPLATE.extract(&project_dir).unwrap();
 
