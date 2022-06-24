@@ -2,7 +2,9 @@
 
 use bonfida_utils::checks::check_account_owner;
 
-use crate::state::{ExampleState, Tag};
+use crate::state::{
+    example_state_borsh::ExampleStateBorsh, example_state_cast::ExampleStateCast, Tag,
+};
 
 use {
     bonfida_utils::{
@@ -38,8 +40,12 @@ pub struct Accounts<'a, T> {
     pub fee_payer: &'a T,
 
     #[cons(writable)]
-    /// The example state account //TODO
-    pub example_state: &'a T,
+    /// The example state cast account //TODO
+    pub example_state_cast: &'a T,
+
+    #[cons(writable)]
+    /// The example state cast account //TODO
+    pub example_state_borsh: &'a T,
 }
 
 impl<'a, 'b: 'a> Accounts<'a, AccountInfo<'b>> {
@@ -52,7 +58,8 @@ impl<'a, 'b: 'a> Accounts<'a, AccountInfo<'b>> {
             fee_payer: next_account_info(accounts_iter)?,
             spl_token_program: next_account_info(accounts_iter)?,
             system_program: next_account_info(accounts_iter)?,
-            example_state: next_account_info(accounts_iter)?,
+            example_state_cast: next_account_info(accounts_iter)?,
+            example_state_borsh: next_account_info(accounts_iter)?,
         };
 
         // Check keys
@@ -60,7 +67,8 @@ impl<'a, 'b: 'a> Accounts<'a, AccountInfo<'b>> {
         check_account_key(accounts.system_program, &system_program::ID)?;
 
         // Check owners
-        check_account_owner(accounts.example_state, program_id)?;
+        check_account_owner(accounts.example_state_cast, program_id)?;
+        check_account_owner(accounts.example_state_borsh, program_id)?;
 
         // Check signer
         check_signer(accounts.fee_payer)?;
@@ -73,16 +81,23 @@ pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], params: Params) ->
     let accounts = Accounts::parse(accounts, program_id)?;
 
     // Verify the example state account
-    let (example_state_key, _) = ExampleState::find_key(program_id);
-    check_account_key(accounts.example_state, &example_state_key)?;
+    let (example_state_key, _) = ExampleStateCast::find_key(program_id);
+    check_account_key(accounts.example_state_cast, &example_state_key)?;
 
-    let mut example_state =
-        ExampleState::from_account_info(accounts.example_state, Tag::Initialized)?;
+    let mut example_state_cast_guard = accounts.example_state_cast.data.borrow_mut();
+
+    let example_state_cast =
+        ExampleStateCast::from_buffer(&mut example_state_cast_guard, Tag::ExampleStateCast)?;
+
+    let mut example_state_borsh_guard = accounts.example_state_borsh.data.borrow_mut();
+
+    let example_state_borsh =
+        ExampleStateBorsh::from_buffer(&mut example_state_borsh_guard, Tag::ExampleStateBorsh)?;
 
     //...
 
     // Update example state account
-    example_state.save(&mut accounts.example_state.data.borrow_mut());
+    example_state_borsh.save(&mut example_state_borsh_guard);
 
     Ok(())
 }
