@@ -1,5 +1,6 @@
 import { deserialize, Schema } from "borsh";
 import { Connection, PublicKey } from "@solana/web3.js";
+import BN from "bn.js";
 
 export enum Tag {
   Uninitialized = 0,
@@ -17,15 +18,15 @@ export class ExampleState {
       {
         kind: "struct",
         fields: [
-          ["tag", "u8"],
+          ["tag", "u64"],
           ["nonce", "u8"],
         ],
       },
     ],
   ]);
 
-  constructor(obj: { tag: number; nonce: number; owner: Uint8Array }) {
-    this.tag = obj.tag as Tag;
+  constructor(obj: { tag: BN; nonce: number; owner: Uint8Array }) {
+    this.tag = obj.tag.toNumber() as Tag;
     this.nonce = obj.nonce;
   }
 

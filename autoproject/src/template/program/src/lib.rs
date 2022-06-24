@@ -15,4 +15,4 @@ pub(crate) mod processor;
 #[allow(missing_docs)]
 pub mod cpi;
 
-declare_id_with_central_state!("..."); //TODO
+declare_id_with_central_state!("11111111111111111111111111111111"); //TODO
