@@ -1,5 +1,7 @@
+use anchor_syn::idl::Idl;
 use clap::{crate_name, crate_version, Arg, ArgMatches, Command};
 use convert_case::{Case, Casing};
+use idl_generate::idl_process_file;
 use proc_macro2::TokenTree;
 use std::{
     collections::HashMap,
@@ -17,6 +19,7 @@ use syn::{
 use crate::js_generate::js_process_file;
 use crate::py_generate::py_process_file;
 
+pub mod idl_generate;
 pub mod js_generate;
 pub mod py_generate;
 pub mod test;
@@ -25,6 +28,7 @@ pub mod test;
 pub enum TargetLang {
     Javascript,
     Python,
+    AnchorIdl,
 }
 
 pub fn command() -> Command<'static> {
@@ -37,6 +41,12 @@ pub fn command() -> Command<'static> {
                 .long("instructions-path")
                 .takes_value(true)
                 .default_value("src/processor"),
+        )
+        .arg(
+            Arg::with_name("toml-path")
+                .long("cargo-toml-path")
+                .takes_value(true)
+                .default_value("Cargo.toml"),
         )
         .arg(
             Arg::with_name("instr-enum-path")
@@ -63,6 +73,7 @@ pub fn command() -> Command<'static> {
 pub fn process(matches: &ArgMatches) {
     let instructions_path = matches.value_of("instr-path").unwrap();
     let instructions_enum_path = matches.value_of("instr-enum-path").unwrap();
+    let cargo_toml_path = matches.value_of("toml-path").unwrap();
     let target_lang_str = matches.value_of("target-lang").unwrap();
     let target_lang = match target_lang_str {
         "js" | "javascript" => TargetLang::Javascript,
@@ -84,12 +95,14 @@ pub fn process(matches: &ArgMatches) {
         }
         false => {
             generate(
+                cargo_toml_path,
                 instructions_path,
                 instructions_enum_path,
                 target_lang,
                 match target_lang {
                     TargetLang::Javascript => "../js/src/raw_instructions.ts",
                     TargetLang::Python => "../python/src/raw_instructions.py",
+                    TargetLang::AnchorIdl => "idl.json",
                 },
             );
         }
@@ -100,15 +113,39 @@ pub fn process(matches: &ArgMatches) {
 }
 
 pub fn generate(
+    cargo_toml_path: &str,
     instructions_path: &str,
     instructions_enum_path: &str,
     target_lang: TargetLang,
     output_path: &str,
 ) {
     let path = std::path::Path::new(instructions_path);
+    let toml_path = std::path::Path::new(cargo_toml_path);
+    let mut toml_file = std::fs::File::open(toml_path).unwrap();
+    let mut raw_toml = String::new();
+    toml_file.read_to_string(&mut raw_toml).unwrap();
+    let toml = toml::Value::from_str(&raw_toml).unwrap();
+    let toml_table = toml.as_table().unwrap();
     let (instruction_tags, use_casting) = parse_instructions_enum(instructions_enum_path);
     let directory = std::fs::read_dir(path).unwrap();
     let mut output = get_header(target_lang);
+    let mut idl = Idl {
+        version: toml_table
+            .get("version")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .to_owned(),
+        name: toml_table.get("name").unwrap().as_str().unwrap().to_owned(),
+        constants: vec![],
+        instructions: vec![],
+        state: None,
+        accounts: vec![],
+        types: vec![],
+        events: None,
+        errors: None,
+        metadata: None,
+    };
     for d in directory {
         let file = d.unwrap();
         let module_name = std::path::Path::new(&file.file_name())
@@ -120,21 +157,39 @@ pub fn generate(
         let instruction_tag = instruction_tags
             .get(&module_name)
             .unwrap_or_else(|| panic!("Instruction not found for {}", module_name));
-        let s = match target_lang {
-            TargetLang::Javascript => js_process_file(
-                &module_name,
-                *instruction_tag,
-                file.path().to_str().unwrap(),
-                use_casting,
-            ),
-            TargetLang::Python => py_process_file(
-                &module_name,
-                *instruction_tag,
-                file.path().to_str().unwrap(),
-                use_casting,
-            ),
+        match target_lang {
+            TargetLang::Javascript => {
+                let s = js_process_file(
+                    &module_name,
+                    *instruction_tag,
+                    file.path().to_str().unwrap(),
+                    use_casting,
+                );
+                output.push_str(&s)
+            }
+            TargetLang::Python => {
+                let s = py_process_file(
+                    &module_name,
+                    *instruction_tag,
+                    file.path().to_str().unwrap(),
+                    use_casting,
+                );
+                output.push_str(&s)
+            }
+            TargetLang::AnchorIdl => {
+                let i = idl_process_file(
+                    &module_name,
+                    *instruction_tag,
+                    file.path().to_str().unwrap(),
+                    use_casting,
+                );
+                idl.instructions.push(i)
+            }
         };
-        output.push_str(&s);
+    }
+
+    if matches!(target_lang, TargetLang::AnchorIdl) {
+        output.push_str(&serde_json::to_string(&idl).unwrap())
     }
 
     let mut out_file = File::create(output_path).unwrap();
@@ -150,16 +205,7 @@ pub fn parse_instructions_enum(instructions_enum_path: &str) -> (HashMap<String,
     let ast: syn::File = syn::parse_str(&raw_string).unwrap();
     let instructions_enum = find_enum(&ast);
     let enum_variants = get_enum_variants(instructions_enum);
-    for (
-        i,
-        Variant {
-            attrs: _,
-            ident,
-            fields: _,
-            discriminant: _,
-        },
-    ) in enum_variants.into_iter().enumerate()
-    {
+    for (i, Variant { ident, .. }) in enum_variants.into_iter().enumerate() {
         let module_name = pascal_to_snake(&ident.to_string());
         result_map.insert(module_name, i);
     }
@@ -170,6 +216,7 @@ pub fn get_header(target_lang: TargetLang) -> String {
     match target_lang {
         TargetLang::Javascript => include_str!("templates/template.ts").to_string(),
         TargetLang::Python => include_str!("templates/template.py").to_string(),
+        TargetLang::AnchorIdl => String::new(),
     }
 }
 
@@ -189,11 +236,8 @@ fn get_simple_type(ty: &Type) -> String {
 fn padding_len(ty: &Type) -> u8 {
     match ty {
         Type::Path(TypePath {
-            qself: _,
-            path: Path {
-                leading_colon: _,
-                segments,
-            },
+            path: Path { segments, .. },
+            ..
         }) => {
             let simple_type = segments.iter().next().unwrap().ident.to_string();
             match simple_type.as_ref() {
@@ -206,14 +250,11 @@ fn padding_len(ty: &Type) -> u8 {
             }
         }
         Type::Array(TypeArray {
-            bracket_token: _,
             elem,
-            semi_token: _,
-            len:
-                Expr::Lit(ExprLit {
-                    attrs: _,
-                    lit: Lit::Int(l),
-                }),
+            len: Expr::Lit(ExprLit {
+                lit: Lit::Int(l), ..
+            }),
+            ..
         }) => padding_len(elem) * l.base10_parse::<u8>().unwrap(),
         _ => unimplemented!(),
     }
@@ -237,16 +278,7 @@ fn find_struct(ident_str: &str, file_ast: &syn::File) -> Item {
         .items
         .iter()
         .find(|a| {
-            if let Item::Struct(ItemStruct {
-                ident,
-                attrs: _,
-                vis: _,
-                struct_token: _,
-                generics: _,
-                fields: _,
-                semi_token: _,
-            }) = a
-            {
+            if let Item::Struct(ItemStruct { ident, .. }) = a {
                 *ident == ident_str
             } else {
                 false
@@ -266,16 +298,7 @@ fn find_enum(file_ast: &syn::File) -> Item {
 }
 
 fn get_enum_variants(s: Item) -> Punctuated<Variant, Comma> {
-    if let Item::Enum(ItemEnum {
-        attrs: _,
-        vis: _,
-        enum_token: _,
-        ident: _,
-        generics: _,
-        brace_token: _,
-        variants,
-    }) = s
-    {
+    if let Item::Enum(ItemEnum { variants, .. }) = s {
         variants
     } else {
         unreachable!()
@@ -284,17 +307,8 @@ fn get_enum_variants(s: Item) -> Punctuated<Variant, Comma> {
 
 fn get_struct_fields(s: Item) -> Punctuated<Field, Comma> {
     if let Item::Struct(ItemStruct {
-        ident: _,
-        attrs: _,
-        vis: _,
-        struct_token: _,
-        generics: _,
-        fields:
-            Fields::Named(FieldsNamed {
-                named,
-                brace_token: _,
-            }),
-        semi_token: _,
+        fields: Fields::Named(FieldsNamed { named, .. }),
+        ..
     }) = s
     {
         named
@@ -335,13 +349,7 @@ fn get_constraints(attrs: &[Attribute]) -> (bool, bool) {
 }
 
 fn is_slice(ty: &Type) -> bool {
-    if let Type::Reference(TypeReference {
-        and_token: _,
-        lifetime: _,
-        mutability: _,
-        elem,
-    }) = ty
-    {
+    if let Type::Reference(TypeReference { elem, .. }) = ty {
         let ty = *elem.clone();
         if let Type::Slice(_) = ty {
             return true;
@@ -351,7 +359,7 @@ fn is_slice(ty: &Type) -> bool {
 }
 
 fn is_option(ty: &Type) -> bool {
-    if let Type::Path(TypePath { qself: _, path }) = ty {
+    if let Type::Path(TypePath { path, .. }) = ty {
         let seg = path.segments.iter().next().unwrap();
         if seg.ident != "Option" {
             unimplemented!()
