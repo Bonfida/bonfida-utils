@@ -21,8 +21,8 @@ pub fn js_process_file(
     f.read_to_string(&mut raw_string).unwrap();
 
     let ast: syn::File = syn::parse_str(&raw_string).unwrap();
-    let accounts_struct_item = find_struct("Accounts", &ast);
-    let params_struct_item = find_struct("Params", &ast);
+    let accounts_struct_item = find_struct(&ast, Some("Accounts"));
+    let params_struct_item = find_struct(&ast, Some("Params"));
 
     let params_fields = get_struct_fields(params_struct_item);
     let accounts_fields = get_struct_fields(accounts_struct_item);
