@@ -1,7 +1,7 @@
 use anchor_syn::idl::Idl;
 use clap::{crate_name, crate_version, Arg, ArgMatches, Command};
 use convert_case::{Case, Casing};
-use idl_generate::idl_process_file;
+use idl_generate::{idl_process_file, idl_process_state_file};
 use proc_macro2::TokenTree;
 use std::{
     collections::HashMap,
@@ -55,11 +55,23 @@ pub fn command() -> Command<'static> {
                 .default_value("src/instruction.rs"),
         )
         .arg(
+            Arg::with_name("account-tag-enum-path")
+                .long("account-tag-enum-path")
+                .takes_value(true)
+                .default_value("src/state.rs"),
+        )
+        .arg(
+            Arg::with_name("state-folder")
+                .long("state-folder")
+                .takes_value(true)
+                .default_value("src/state"),
+        )
+        .arg(
             Arg::with_name("target-lang")
                 .long("target-language")
                 .takes_value(true)
                 .default_value("js")
-                .help("Enter \"py\" or \"js\""),
+                .help("Enter \"py\", \"js\" or \"idl\""),
         )
         .arg(
             Arg::with_name("test")
@@ -75,9 +87,11 @@ pub fn process(matches: &ArgMatches) {
     let instructions_enum_path = matches.value_of("instr-enum-path").unwrap();
     let cargo_toml_path = matches.value_of("toml-path").unwrap();
     let target_lang_str = matches.value_of("target-lang").unwrap();
+    let state_folder = matches.value_of("state-folder").unwrap();
     let target_lang = match target_lang_str {
         "js" | "javascript" => TargetLang::Javascript,
         "py" | "python" => TargetLang::Python,
+        "idl" | "anchor-idl" => TargetLang::AnchorIdl,
         _ => {
             println!("Target language must be javascript or python");
             panic!()
@@ -98,6 +112,7 @@ pub fn process(matches: &ArgMatches) {
                 cargo_toml_path,
                 instructions_path,
                 instructions_enum_path,
+                state_folder,
                 target_lang,
                 match target_lang {
                     TargetLang::Javascript => "../js/src/raw_instructions.ts",
@@ -116,6 +131,7 @@ pub fn generate(
     cargo_toml_path: &str,
     instructions_path: &str,
     instructions_enum_path: &str,
+    state_folder_path: &str,
     target_lang: TargetLang,
     output_path: &str,
 ) {
@@ -128,6 +144,7 @@ pub fn generate(
     let toml_table = toml.as_table().unwrap();
     let (instruction_tags, use_casting) = parse_instructions_enum(instructions_enum_path);
     let directory = std::fs::read_dir(path).unwrap();
+    let state_directory = std::fs::read_dir(std::path::Path::new(state_folder_path)).unwrap();
     let mut output = get_header(target_lang);
     let mut idl = Idl {
         version: toml_table
@@ -177,18 +194,18 @@ pub fn generate(
                 output.push_str(&s)
             }
             TargetLang::AnchorIdl => {
-                let i = idl_process_file(
-                    &module_name,
-                    *instruction_tag,
-                    file.path().to_str().unwrap(),
-                    use_casting,
-                );
+                let i = idl_process_file(&module_name, file.path().to_str().unwrap());
                 idl.instructions.push(i)
             }
         };
     }
 
     if matches!(target_lang, TargetLang::AnchorIdl) {
+        for d in state_directory {
+            let file = d.unwrap();
+            let account = idl_process_state_file(&file.path());
+            idl.accounts.push(account);
+        }
         output.push_str(&serde_json::to_string(&idl).unwrap())
     }
 
@@ -203,13 +220,28 @@ pub fn parse_instructions_enum(instructions_enum_path: &str) -> (HashMap<String,
     f.read_to_string(&mut raw_string).unwrap();
     let use_casting = raw_string.contains("get_instruction_cast");
     let ast: syn::File = syn::parse_str(&raw_string).unwrap();
-    let instructions_enum = find_enum(&ast);
+    let instructions_enum = find_enum(&ast, None);
     let enum_variants = get_enum_variants(instructions_enum);
     for (i, Variant { ident, .. }) in enum_variants.into_iter().enumerate() {
         let module_name = pascal_to_snake(&ident.to_string());
         result_map.insert(module_name, i);
     }
     (result_map, use_casting)
+}
+
+pub fn parse_account_tag_enum(account_tag_enum_path: &str) -> HashMap<String, usize> {
+    let mut f = File::open(account_tag_enum_path).unwrap();
+    let mut result_map = HashMap::new();
+    let mut raw_string = String::new();
+    f.read_to_string(&mut raw_string).unwrap();
+    let ast: syn::File = syn::parse_str(&raw_string).unwrap();
+    let account_tag_enum = find_enum(&ast, Some("AccountTag"));
+    let enum_variants = get_enum_variants(account_tag_enum);
+    for (i, Variant { ident, .. }) in enum_variants.into_iter().enumerate() {
+        let module_name = pascal_to_snake(&ident.to_string());
+        result_map.insert(module_name, i);
+    }
+    result_map
 }
 
 pub fn get_header(target_lang: TargetLang) -> String {
@@ -273,13 +305,13 @@ fn lower_to_upper(s: &str) -> String {
     s.from_case(Case::Lower).to_case(Case::Upper)
 }
 
-fn find_struct(ident_str: &str, file_ast: &syn::File) -> Item {
+fn find_struct(file_ast: &syn::File, ident_str: Option<&str>) -> Item {
     file_ast
         .items
         .iter()
         .find(|a| {
             if let Item::Struct(ItemStruct { ident, .. }) = a {
-                *ident == ident_str
+                ident_str.map(|s| *ident == s).unwrap_or(true)
             } else {
                 false
             }
@@ -288,11 +320,17 @@ fn find_struct(ident_str: &str, file_ast: &syn::File) -> Item {
         .clone()
 }
 
-fn find_enum(file_ast: &syn::File) -> Item {
+fn find_enum(file_ast: &syn::File, ident_name: Option<&str>) -> Item {
     file_ast
         .items
         .iter()
-        .find(|a| matches!(a, Item::Enum(_)))
+        .find(|a| {
+            if let Item::Enum(i) = a {
+                ident_name.map(|s| i.ident == s).unwrap_or(true)
+            } else {
+                false
+            }
+        })
         .unwrap()
         .clone()
 }
