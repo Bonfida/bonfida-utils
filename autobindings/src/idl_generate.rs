@@ -57,7 +57,7 @@ pub fn idl_process_file(module_name: &str, path: &str) -> IdlInstruction {
     instruction
 }
 
-pub fn idl_process_state_file(path: &std::path::Path) -> IdlTypeDefinition {
+pub fn idl_process_state_file(path: &std::path::Path, skip_account_tag: bool) -> IdlTypeDefinition {
     let mut f = std::fs::File::open(path).unwrap();
     let mut raw_string = String::new();
     f.read_to_string(&mut raw_string).unwrap();
@@ -73,10 +73,13 @@ pub fn idl_process_state_file(path: &std::path::Path) -> IdlTypeDefinition {
 
     let struct_fields = get_struct_fields(s);
 
-    let mut fields = vec![IdlField {
-        name: String::from("AccountTag"),
-        ty: IdlType::U64,
-    }];
+    let mut fields = Vec::with_capacity(struct_fields.len() + 1);
+    if !skip_account_tag {
+        fields.push(IdlField {
+            name: String::from("AccountTag"),
+            ty: IdlType::U64,
+        });
+    }
 
     for Field { ident, ty, .. } in struct_fields {
         fields.push(IdlField {

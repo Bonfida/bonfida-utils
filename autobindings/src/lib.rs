@@ -80,6 +80,11 @@ pub fn command() -> Command<'static> {
                 .default_value("false")
                 .help("Enter true or false"),
         )
+        .arg(
+            Arg::with_name("skip-account-tag")
+                .long("skip-account-tag")
+                .takes_value(false),
+        )
 }
 
 pub fn process(matches: &ArgMatches) {
@@ -88,6 +93,7 @@ pub fn process(matches: &ArgMatches) {
     let cargo_toml_path = matches.value_of("toml-path").unwrap();
     let target_lang_str = matches.value_of("target-lang").unwrap();
     let state_folder = matches.value_of("state-folder").unwrap();
+    let skip_account_tag = matches.contains_id("skip-account-tag");
     let target_lang = match target_lang_str {
         "js" | "javascript" => TargetLang::Javascript,
         "py" | "python" => TargetLang::Python,
@@ -119,6 +125,7 @@ pub fn process(matches: &ArgMatches) {
                     TargetLang::Python => "../python/src/raw_instructions.py",
                     TargetLang::AnchorIdl => "idl.json",
                 },
+                skip_account_tag,
             );
         }
     }
@@ -134,6 +141,7 @@ pub fn generate(
     state_folder_path: &str,
     target_lang: TargetLang,
     output_path: &str,
+    skip_account_tag: bool,
 ) {
     let path = std::path::Path::new(instructions_path);
     let toml_path = std::path::Path::new(cargo_toml_path);
@@ -146,14 +154,20 @@ pub fn generate(
     let directory = std::fs::read_dir(path).unwrap();
     let state_directory = std::fs::read_dir(std::path::Path::new(state_folder_path)).unwrap();
     let mut output = get_header(target_lang);
+    let package_table = toml_table.get("package").unwrap().as_table().unwrap();
     let mut idl = Idl {
-        version: toml_table
+        version: package_table
             .get("version")
             .unwrap()
             .as_str()
             .unwrap()
             .to_owned(),
-        name: toml_table.get("name").unwrap().as_str().unwrap().to_owned(),
+        name: package_table
+            .get("name")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .to_owned(),
         constants: vec![],
         instructions: vec![],
         state: None,
@@ -203,10 +217,10 @@ pub fn generate(
     if matches!(target_lang, TargetLang::AnchorIdl) {
         for d in state_directory {
             let file = d.unwrap();
-            let account = idl_process_state_file(&file.path());
+            let account = idl_process_state_file(&file.path(), skip_account_tag);
             idl.accounts.push(account);
         }
-        output.push_str(&serde_json::to_string(&idl).unwrap())
+        output.push_str(&serde_json::to_string_pretty(&idl).unwrap())
     }
 
     let mut out_file = File::create(output_path).unwrap();
