@@ -1,4 +1,5 @@
 use anchor_syn::idl::Idl;
+use cargo_toml::Manifest;
 use clap::{crate_name, crate_version, Arg, ArgMatches, Command};
 use convert_case::{Case, Casing};
 use idl_generate::{idl_process_file, idl_process_state_file};
@@ -144,30 +145,14 @@ pub fn generate(
     skip_account_tag: bool,
 ) {
     let path = std::path::Path::new(instructions_path);
-    let toml_path = std::path::Path::new(cargo_toml_path);
-    let mut toml_file = std::fs::File::open(toml_path).unwrap();
-    let mut raw_toml = String::new();
-    toml_file.read_to_string(&mut raw_toml).unwrap();
-    let toml = toml::Value::from_str(&raw_toml).unwrap();
-    let toml_table = toml.as_table().unwrap();
     let (instruction_tags, use_casting) = parse_instructions_enum(instructions_enum_path);
     let directory = std::fs::read_dir(path).unwrap();
+    let manifest = Manifest::from_path(cargo_toml_path).unwrap();
     let state_directory = std::fs::read_dir(std::path::Path::new(state_folder_path)).unwrap();
     let mut output = get_header(target_lang);
-    let package_table = toml_table.get("package").unwrap().as_table().unwrap();
     let mut idl = Idl {
-        version: package_table
-            .get("version")
-            .unwrap()
-            .as_str()
-            .unwrap()
-            .to_owned(),
-        name: package_table
-            .get("name")
-            .unwrap()
-            .as_str()
-            .unwrap()
-            .to_owned(),
+        version: manifest.package.as_ref().unwrap().version.clone(),
+        name: manifest.package.as_ref().unwrap().name.clone(),
         constants: vec![],
         instructions: vec![],
         state: None,
