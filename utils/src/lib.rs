@@ -5,6 +5,7 @@ declare_id!("11111111111111111111111111111111");
 
 mod accounts;
 mod borsh_size;
+pub mod borsh_utils;
 pub mod checks;
 mod declare_id_with_central_state;
 
