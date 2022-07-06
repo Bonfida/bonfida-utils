@@ -10,6 +10,7 @@ edition = "2018"
 
 [features]
 instruction_params_casting = ["bonfida-macros/instruction_params_casting", "bytemuck"]
+instruction_params_custom = ["bonfida-macros/instruction_params_custom", "bytemuck"]
 mock-oracle = []
 benchmarking = ["lazy_static", "regex", "serde", "serde_json"]
 
@@ -17,7 +18,7 @@ benchmarking = ["lazy_static", "regex", "serde", "serde_json"]
 borsh = "0.9"
 solana-program = "1.8"
 pyth-sdk-solana = "0.4.0"
-bonfida-macros = "0.2.3"
+bonfida-macros = {path = "../macros"}
 bytemuck = {version = "1.9.1", optional=true}
 lazy_static = {version = "1.4.0", optional=true}
 regex = {version = "1.5.5", optional=true}

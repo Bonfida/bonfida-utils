@@ -1,4 +1,6 @@
 use crate::borsh_size::BorshSize;
+#[cfg(feature = "instruction_params_custom")]
+use crate::InstructionParams;
 use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(feature = "instruction_params_casting")]
 use bytemuck::{bytes_of, NoUninit};
@@ -50,6 +52,25 @@ pub trait InstructionsAccount {
         data.push(instruction_id);
         data.extend([0; 7].iter());
         data.extend(bytes_of(&params));
+
+        Instruction {
+            program_id,
+            accounts: self.get_accounts_vec(),
+            data,
+        }
+    }
+    #[cfg(feature = "instruction_params_custom")]
+    fn get_instruction_custom<'a, P: InstructionParams<'a>>(
+        &self,
+        program_id: Pubkey,
+        instruction_id: u8,
+        params: P,
+    ) -> Instruction {
+        let cap = 8 + params.size();
+        let mut data = Vec::with_capacity(cap);
+        data.push(instruction_id);
+        data.extend([0; 7].iter());
+        params.write_instruction_data(&mut data);
 
         Instruction {
             program_id,
