@@ -8,6 +8,7 @@ license = "MIT"
 
 [features]
 instruction_params_casting = []
+instruction_params_custom = []
 
 [lib]
 proc-macro = true
