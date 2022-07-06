@@ -2,7 +2,7 @@ use proc_macro::TokenStream;
 mod accounts;
 mod borsh_size;
 mod declare_id_with_central_state;
-mod instruction_params;
+mod wrapped_pod;
 
 #[proc_macro_derive(InstructionsAccount, attributes(cons))]
 pub fn derive_instructions_account(item: TokenStream) -> TokenStream {
@@ -16,10 +16,16 @@ pub fn derive_borsh_size(item: TokenStream) -> TokenStream {
     borsh_size::process(ast).into()
 }
 
-#[proc_macro_derive(InstructionParams)]
-pub fn derive_instruction_params(item: TokenStream) -> TokenStream {
+#[proc_macro_derive(WrappedPod)]
+pub fn derive_wrapped_pod(item: TokenStream) -> TokenStream {
     let ast = syn::parse(item).unwrap();
-    instruction_params::process(ast).into()
+    wrapped_pod::process(ast, false).into()
+}
+
+#[proc_macro_derive(WrappedPodMut)]
+pub fn derive_wrapped_pod_mut(item: TokenStream) -> TokenStream {
+    let ast = syn::parse(item).unwrap();
+    wrapped_pod::process(ast, true).into()
 }
 
 #[proc_macro]
