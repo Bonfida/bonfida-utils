@@ -18,7 +18,6 @@ pub fn process(mut ast: syn::DeriveInput, is_mut: bool) -> TokenStream {
             let mut cast_to_bytes_statements = Vec::with_capacity(named.len());
             let mut cast_from_bytes_statements = Vec::with_capacity(named.len());
             let mut split_statements = Vec::with_capacity(named.len());
-            let mut types = Vec::with_capacity(named.len());
 
             for n in named.into_iter() {
                 let ident = n.ident.clone().unwrap();
@@ -36,7 +35,20 @@ pub fn process(mut ast: syn::DeriveInput, is_mut: bool) -> TokenStream {
                                     .push(quote!(bytemuck::cast_slice::<u8, _>(#ident)));
                             }
                             split_statements.push(quote!(let #ident = buffer;));
-                            types.push(quote!(#elem));
+                        }
+                        Type::Path(p)
+                            if p.path.get_ident().map(|s| s == "str").unwrap_or(false) =>
+                        {
+                            lengths.push(quote!(self.#ident.len()));
+                            cast_to_bytes_statements.push(quote!(self.#ident.as_bytes()));
+                            if is_mut {
+                                cast_from_bytes_statements
+                                    .push(quote!(std::str::from_utf8_mut(#ident).unwrap()));
+                            } else {
+                                cast_from_bytes_statements
+                                    .push(quote!(std::str::from_utf8(#ident).unwrap()));
+                            }
+                            split_statements.push(quote!(let #ident = buffer;));
                         }
                         Type::Path(p) => {
                             let len = quote!(std::mem::size_of::<#p>());
@@ -54,7 +66,6 @@ pub fn process(mut ast: syn::DeriveInput, is_mut: bool) -> TokenStream {
                                 split_statements
                                     .push(quote!(let (#ident, buffer) = buffer.split_at(#len);));
                             }
-                            types.push(quote!(#p));
                             lengths.push(len);
                         }
                         e => panic!("Unsupported type : {:?}", e),
