@@ -55,9 +55,9 @@ impl<'a, 'b: 'a> Accounts<'a, AccountInfo<'b>> {
     ) -> Result<Self, ProgramError> {
         let accounts_iter = &mut accounts.iter();
         let accounts = Accounts {
-            fee_payer: next_account_info(accounts_iter)?,
-            spl_token_program: next_account_info(accounts_iter)?,
             system_program: next_account_info(accounts_iter)?,
+            spl_token_program: next_account_info(accounts_iter)?,
+            fee_payer: next_account_info(accounts_iter)?,
             example_state_cast: next_account_info(accounts_iter)?,
             example_state_borsh: next_account_info(accounts_iter)?,
         };

@@ -45,6 +45,12 @@ pub fn command() -> Command<'static> {
 pub fn process(matches: &ArgMatches) {
     let project_name = matches.value_of("name").unwrap();
     let project_path = matches.value_of("new-project-path").unwrap_or(".");
+
+    if !project_name.is_case(Case::Kebab) {
+        println!("Project name should be given in-kebab-case.");
+        panic!();
+    };
+
     generate(project_name, project_path);
 }
 
