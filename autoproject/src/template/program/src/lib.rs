@@ -10,7 +10,7 @@ pub mod instruction;
 pub mod state;
 
 #[doc(hidden)]
-pub(crate) mod processor;
+pub mod processor;
 
 #[allow(missing_docs)]
 pub mod cpi;
