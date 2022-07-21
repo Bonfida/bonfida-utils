@@ -1,8 +1,5 @@
-use crate::borsh_size::BorshSize;
-#[cfg(feature = "instruction_params_custom")]
-use crate::WrappedPod;
+use crate::{borsh_size::BorshSize, WrappedPod};
 use borsh::{BorshDeserialize, BorshSerialize};
-#[cfg(feature = "instruction_params_casting")]
 use bytemuck::{bytes_of, NoUninit};
 use solana_program::{
     instruction::{AccountMeta, Instruction},
@@ -39,8 +36,6 @@ pub trait InstructionsAccount {
             data,
         }
     }
-
-    #[cfg(feature = "instruction_params_casting")]
     fn get_instruction_cast<P: NoUninit>(
         &self,
         program_id: Pubkey,
@@ -59,7 +54,6 @@ pub trait InstructionsAccount {
             data,
         }
     }
-    #[cfg(feature = "instruction_params_custom")]
     fn get_instruction_wrapped_pod<'a, P: WrappedPod<'a>>(
         &self,
         program_id: Pubkey,
