@@ -1,0 +1,13 @@
+[package]
+name = "bondida-test-utils"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+solana-program = "1.11.3"
+solana-program-test = "1.11.3"
+solana-sdk = "1.11.3"
+spl-token = "3.3.0"
+async-trait = "0.1.56"
