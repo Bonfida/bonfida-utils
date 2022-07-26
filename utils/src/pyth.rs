@@ -1,4 +1,3 @@
-use crate::fp_math::safe_downcast;
 use pyth_sdk_solana::{
     state::{
         load_mapping_account, load_price_account, load_product_account, CorpAction, PriceStatus,
@@ -7,6 +6,7 @@ use pyth_sdk_solana::{
     Price,
 };
 use solana_program::{msg, program_error::ProgramError, pubkey::Pubkey};
+use std::convert::TryInto;
 #[cfg(feature = "mock-oracle")]
 use std::convert::TryInto;
 
@@ -79,7 +79,7 @@ pub fn get_oracle_price_fp32(
     let corrected_price =
         (price * 10u128.pow(quote_decimals as u32)) / 10u128.pow(base_decimals as u32);
 
-    let final_price = safe_downcast(corrected_price).unwrap();
+    let final_price = corrected_price.try_into().unwrap();
 
     msg!("Pyth FP32 price value: {:?}", final_price);
 
