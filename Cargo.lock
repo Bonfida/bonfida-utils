@@ -379,17 +379,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
 
 [[package]]
-name = "bondida-test-utils"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "solana-program",
- "solana-program-test",
- "solana-sdk",
- "spl-token",
-]
-
-[[package]]
 name = "bonfida-macros"
 version = "0.2.4"
 dependencies = [
@@ -409,6 +398,17 @@ dependencies = [
  "quote 1.0.20",
  "solana-program",
  "syn 1.0.98",
+]
+
+[[package]]
+name = "bonfida-test-utils"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "spl-token",
 ]
 
 [[package]]
@@ -1093,7 +1093,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c07b7cc9cd8c08d10db74fca3b20949b9b6199725c04a0cce6d543496098fcac"
 dependencies = [
  "enum-ordinalize",
- "proc-macro2 1.0.40",
+ "proc-macro2 1.0.42",
  "quote 1.0.20",
  "syn 1.0.98",
 ]
@@ -1147,7 +1147,7 @@ checksum = "2170fc0efee383079a8bdd05d6ea2a184d2a0f07a1c1dcabdb2fd5e9f24bc36c"
 dependencies = [
  "num-bigint 0.4.3",
  "num-traits",
- "proc-macro2 1.0.40",
+ "proc-macro2 1.0.42",
  "quote 1.0.20",
  "rustc_version",
  "syn 1.0.98",
@@ -2387,7 +2387,7 @@ version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "710faf75e1b33345361201d36d04e98ac1ed8909151a017ed384700836104c74"
 dependencies = [
- "proc-macro2 1.0.40",
+ "proc-macro2 1.0.42",
  "quote 1.0.20",
  "syn 1.0.98",
 ]
@@ -3020,7 +3020,7 @@ version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bdbda6ac5cd1321e724fa9cee216f3a61885889b896f073b8f82322789c5250e"
 dependencies = [
- "proc-macro2 1.0.40",
+ "proc-macro2 1.0.42",
  "quote 1.0.20",
  "syn 1.0.98",
 ]
@@ -3320,9 +3320,9 @@ dependencies = [
 
 [[package]]
 name = "solana-banks-client"
-version = "1.11.3"
+version = "1.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb81eae8863d8bc5f64f33b0df432c6b9ff1b4da747973467145524622b2d747"
+checksum = "83ad811182bbdd980bbc2b1e5c43c0ebb9567278d933663f1a5a29ccb9b95ac4"
 dependencies = [
  "borsh",
  "futures",
@@ -3337,9 +3337,9 @@ dependencies = [
 
 [[package]]
 name = "solana-banks-interface"
-version = "1.11.3"
+version = "1.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e10c4f92b1ab3e95d22b47a822b7a89aae641a9d312332bfaabbcbb6e5e0450"
+checksum = "c0d47998fa03097b3ee32a4aad12d74e182d8420dce87aca4f76c264fba33312"
 dependencies = [
  "serde",
  "solana-sdk",
@@ -3348,9 +3348,9 @@ dependencies = [
 
 [[package]]
 name = "solana-banks-server"
-version = "1.11.3"
+version = "1.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b232caf155222f4ed4ddead7c930805a714ad2fbdb4e4e9d5ed59efe5c787145"
+checksum = "0067ac8167745e0c70029a8558e28deb2348ef2858b74542d8d479f5512d4191"
 dependencies = [
  "bincode",
  "crossbeam-channel",
@@ -3368,9 +3368,9 @@ dependencies = [
 
 [[package]]
 name = "solana-bpf-loader-program"
-version = "1.11.3"
+version = "1.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d016a6b439258d310f590d118ca40cfaf6710408b656504fbe1f9fee7ced8820"
+checksum = "550c8cd45221e2110f43230294a33efbf9bfecf9c8c7933aa4fdd531a684567a"
 dependencies = [
  "bincode",
  "byteorder",
@@ -3743,9 +3743,9 @@ dependencies = [
 
 [[package]]
 name = "solana-program-test"
-version = "1.11.3"
+version = "1.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "093be97676956547222d4532cca8bcb882f4c26191a1581c865f3a530a1b7e84"
+checksum = "f72c1263dae9bf4ad5a492ca94fa9cb597d73f70d299945772018e6320af936f"
 dependencies = [
  "assert_matches",
  "async-trait",
@@ -3921,9 +3921,9 @@ dependencies = [
 
 [[package]]
 name = "solana-send-transaction-service"
-version = "1.11.3"
+version = "1.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7765ba12ede5d62af57ec5c5ea472b16d4907fb4eefb43c249b9a0ea8fab4c0f"
+checksum = "80597fcdc895b3b964d7493eafc672e9bc9cfc729d4d8a9c28edb063cca90e0c"
 dependencies = [
  "crossbeam-channel",
  "log",
@@ -4310,7 +4310,7 @@ version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ee42b4e559f17bce0385ebf511a7beb67d5cc33c12c96b7f4e9789919d9c10f"
 dependencies = [
- "proc-macro2 1.0.40",
+ "proc-macro2 1.0.42",
  "quote 1.0.20",
  "syn 1.0.98",
 ]

@@ -1,6 +1,9 @@
 [package]
-name = "bondida-test-utils"
+name = "bonfida-test-utils"
 version = "0.1.0"
+authors = ["ellttBen <elliott@bonfida.com>"]
+description = "Solana program testing utilities when working with bonfida-utils."
+license = "MIT"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
