@@ -1,6 +1,7 @@
 use solana_program::program_error::ProgramError;
 use solana_program_test::{BanksClientError, ProgramTestError};
 
+#[derive(Debug)]
 pub enum TestError {
     BanksClientError(BanksClientError),
     ProgramError(ProgramError),

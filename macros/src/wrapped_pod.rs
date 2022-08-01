@@ -52,7 +52,6 @@ pub fn process(mut ast: syn::DeriveInput, is_mut: bool) -> TokenStream {
                         }
                         Type::Path(p) => {
                             let len = quote!(std::mem::size_of::<#p>());
-                            eprintln!("{:?}", quote!(#p));
                             cast_to_bytes_statements.push(quote!(bytemuck::bytes_of(self.#ident)));
                             if is_mut {
                                 cast_from_bytes_statements

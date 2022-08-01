@@ -10,6 +10,8 @@ pub trait ProgramTestExt {
         decimals: u8,
         mint_authority: &Pubkey,
     ) -> (Pubkey, Mint);
+
+    fn add_account_with_lamports(&mut self, key: Pubkey, lamports: u64);
 }
 
 impl ProgramTestExt for ProgramTest {
@@ -40,5 +42,15 @@ impl ProgramTestExt for ProgramTest {
             },
         );
         (address, mint_info)
+    }
+
+    fn add_account_with_lamports(&mut self, key: Pubkey, lamports: u64) {
+        self.add_account(
+            key,
+            Account {
+                lamports,
+                ..Default::default()
+            },
+        );
     }
 }

@@ -1,5 +1,8 @@
 use async_trait::async_trait;
-use solana_program::{clock::Clock, instruction::Instruction, program_pack::Pack, pubkey::Pubkey};
+use solana_program::{
+    clock::Clock, instruction::Instruction, program_pack::Pack, pubkey::Pubkey, rent::Rent,
+    system_instruction::create_account,
+};
 use solana_program_test::ProgramTestContext;
 use solana_sdk::{signature::Keypair, signer::Signer, transaction::Transaction};
 
@@ -29,6 +32,19 @@ pub trait ProgramTestContextExt {
     ) -> Result<(), TestError>;
 
     async fn warp_to_timestamp(&mut self, timestamp: i64) -> Result<(), TestError>;
+    async fn initialize_token_accounts(
+        &mut self,
+        mint: Pubkey,
+        owners: &[Pubkey],
+    ) -> Result<Vec<Pubkey>, TestError>;
+
+    async fn get_current_timestamp(&mut self) -> Result<i64, TestError>;
+
+    async fn initialize_new_account(
+        &mut self,
+        space: usize,
+        program_id: Pubkey,
+    ) -> Result<Pubkey, TestError>;
 }
 
 #[async_trait]
@@ -96,5 +112,63 @@ impl ProgramTestContextExt for ProgramTestContext {
         self.set_sysvar(&clock);
         self.warp_to_slot(clock.slot + number_of_slots_to_warp)?;
         Ok(())
+    }
+
+    async fn initialize_token_accounts(
+        &mut self,
+        mint: Pubkey,
+        owners: &[Pubkey],
+    ) -> Result<Vec<Pubkey>, TestError> {
+        let mut instructions = Vec::with_capacity(owners.len());
+        let mut account_keys = Vec::with_capacity(owners.len());
+        const allocation_size: usize = spl_token::state::Account::LEN;
+        let rent = self.banks_client.get_sysvar::<Rent>().await.unwrap();
+        let lamports = rent.minimum_balance(allocation_size);
+        for o in owners {
+            let account_keypair = Keypair::new();
+            let account_pubkey = account_keypair.pubkey();
+            let allocate_ix = create_account(
+                &self.payer.pubkey(),
+                &account_keypair.pubkey(),
+                lamports,
+                allocation_size as u64,
+                &spl_token::ID,
+            );
+            let i =
+                spl_token::instruction::initialize_account(&spl_token::ID, o, &mint, o).unwrap();
+
+            self.sign_send_instructions(&[allocate_ix, i], &[&account_keypair])
+                .await?;
+            account_keys.push(account_pubkey);
+        }
+        for c in instructions.chunks(10) {
+            self.sign_send_instructions(c, &[]).await?;
+        }
+        Ok(account_keys)
+    }
+
+    async fn get_current_timestamp(&mut self) -> Result<i64, TestError> {
+        let clock = self.banks_client.get_sysvar::<Clock>().await?;
+        Ok(clock.unix_timestamp)
+    }
+
+    async fn initialize_new_account(
+        &mut self,
+        space: usize,
+        program_id: Pubkey,
+    ) -> Result<Pubkey, TestError> {
+        let account_keypair = Keypair::new();
+        let rent = self.banks_client.get_sysvar::<Rent>().await.unwrap();
+        let lamports = rent.minimum_balance(space);
+        let ix = create_account(
+            &self.payer.pubkey(),
+            &account_keypair.pubkey(),
+            lamports,
+            space as u64,
+            &program_id,
+        );
+        self.sign_send_instructions(&[ix], &[&account_keypair])
+            .await?;
+        Ok(account_keypair.pubkey())
     }
 }
