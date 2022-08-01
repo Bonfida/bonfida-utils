@@ -1,6 +1,6 @@
 [package]
 name = "bonfida-macros"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["ellttBen <elliott@bonfida.com>"]
 edition = "2018"
 description = "Bonfida-utils macros"
