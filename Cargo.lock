@@ -380,9 +380,7 @@ checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
 
 [[package]]
 name = "bonfida-macros"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d6e023a8cc154a88855dc6cc9fad493d0cf544200e67d755a15c856827c041b"
+version = "0.2.5"
 dependencies = [
  "proc-macro2 1.0.42",
  "quote 1.0.20",
@@ -393,6 +391,8 @@ dependencies = [
 [[package]]
 name = "bonfida-macros"
 version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f5ace5ed40eb56cd6d6a0de41bc2e919af6047d98f7e502d06fa201a7814ad4"
 dependencies = [
  "proc-macro2 1.0.42",
  "quote 1.0.20",
@@ -414,9 +414,9 @@ dependencies = [
 
 [[package]]
 name = "bonfida-utils"
-version = "0.2.13"
+version = "0.2.14"
 dependencies = [
- "bonfida-macros 0.2.4",
+ "bonfida-macros 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "borsh",
  "bytemuck",
  "lazy_static",
@@ -2159,7 +2159,7 @@ version = "0.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b0498641e53dd6ac1a4f22547548caa6864cc4933784319cd1775271c5a46ce"
 dependencies = [
- "proc-macro-crate 1.1.3",
+ "proc-macro-crate 1.2.0",
  "proc-macro2 1.0.42",
  "quote 1.0.20",
  "syn 1.0.98",
@@ -2457,10 +2457,11 @@ dependencies = [
 
 [[package]]
 name = "proc-macro-crate"
-version = "1.1.3"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e17d47ce914bf4de440332250b0edd23ce48c005f59fab39d3335866b114f11a"
+checksum = "26d50bfb8c23f23915855a00d98b5a35ef2e0b871bb52937bacadb798fbb66c8"
 dependencies = [
+ "once_cell",
  "thiserror",
  "toml",
 ]
@@ -3085,9 +3086,9 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.140"
+version = "1.0.141"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc855a42c7967b7c369eb5860f7164ef1f6f81c20c7cc1141f2a604e18723b03"
+checksum = "7af873f2c95b99fcb0bd0fe622a43e29514658873c8ceba88c4cb88833a22500"
 dependencies = [
  "serde_derive",
 ]
@@ -3103,9 +3104,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.140"
+version = "1.0.141"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f2122636b9fe3b81f1cb25099fcf2d3f542cdb1d45940d56c713158884a05da"
+checksum = "75743a150d003dd863b51dc809bcad0d73f2102c53632f1e954e738192a3413f"
 dependencies = [
  "proc-macro2 1.0.42",
  "quote 1.0.20",
