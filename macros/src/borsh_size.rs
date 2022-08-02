@@ -6,13 +6,12 @@ pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
     let struct_ident = ast.ident;
     match &mut ast.data {
         syn::Data::Struct(syn::DataStruct {
-            struct_token: t,
             fields:
                 syn::Fields::Named(syn::FieldsNamed {
                     brace_token: _,
                     named,
                 }),
-            semi_token: _,
+            ..
         }) => {
             let vars = named.into_iter().map(|n| {
                 let field_ident = n.ident.clone().unwrap();
