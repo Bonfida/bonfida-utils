@@ -121,25 +121,14 @@ impl ProgramTestContextExt for ProgramTestContext {
     ) -> Result<Vec<Pubkey>, TestError> {
         let mut instructions = Vec::with_capacity(owners.len());
         let mut account_keys = Vec::with_capacity(owners.len());
-        const allocation_size: usize = spl_token::state::Account::LEN;
-        let rent = self.banks_client.get_sysvar::<Rent>().await.unwrap();
-        let lamports = rent.minimum_balance(allocation_size);
         for o in owners {
-            let account_keypair = Keypair::new();
-            let account_pubkey = account_keypair.pubkey();
-            let allocate_ix = create_account(
+            let i = spl_associated_token_account::instruction::create_associated_token_account(
                 &self.payer.pubkey(),
-                &account_keypair.pubkey(),
-                lamports,
-                allocation_size as u64,
-                &spl_token::ID,
+                o,
+                &mint,
             );
-            let i =
-                spl_token::instruction::initialize_account(&spl_token::ID, o, &mint, o).unwrap();
-
-            self.sign_send_instructions(&[allocate_ix, i], &[&account_keypair])
-                .await?;
-            account_keys.push(account_pubkey);
+            account_keys.push(i.accounts[1].pubkey);
+            instructions.push(i);
         }
         for c in instructions.chunks(10) {
             self.sign_send_instructions(c, &[]).await?;
