@@ -55,6 +55,7 @@ pub fn check_rent_exempt(account: &AccountInfo) -> ProgramResult {
 pub fn check_token_account_owner(
     account: &AccountInfo,
     owner: &Pubkey,
+    no_close_or_delegate: bool,
 ) -> Result<Account, ProgramError> {
     check_account_owner(account, &spl_token::ID)?;
     let token_account = Account::unpack_from_slice(&account.data.borrow())?;
@@ -66,5 +67,13 @@ pub fn check_token_account_owner(
         );
         return Err(ProgramError::InvalidArgument);
     }
+
+    if no_close_or_delegate
+        && (token_account.delegate.is_some() || token_account.close_authority.is_some())
+    {
+        msg!("This token account cannot have a delegate or close authority");
+        return Err(ProgramError::InvalidArgument);
+    }
+
     Ok(token_account)
 }
