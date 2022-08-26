@@ -126,6 +126,7 @@ impl ProgramTestContextExt for ProgramTestContext {
                 &self.payer.pubkey(),
                 o,
                 &mint,
+                &spl_token::ID,
             );
             account_keys.push(i.accounts[1].pubkey);
             instructions.push(i);
