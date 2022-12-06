@@ -8,7 +8,7 @@ use syn::{LitByte, LitStr};
 pub fn process(item: TokenStream) -> TokenStream {
     let str: LitStr = syn::parse(item.into()).unwrap();
     let key = str.value();
-    let hashed_array = hashv(&[format!("{}\0{}", HASH_PREFIX, key).as_bytes()]).to_bytes();
+    let hashed_array = hashv(&[format!("{}\x01{}", HASH_PREFIX, key).as_bytes()]).to_bytes();
     let hashed_bytes = hashed_array
         .iter()
         .map(|b| LitByte::new(*b, Span::call_site()));

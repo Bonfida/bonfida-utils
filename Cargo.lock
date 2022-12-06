@@ -390,6 +390,8 @@ checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
 [[package]]
 name = "bonfida-macros"
 version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e738a4d372a24c4194250859a310db4a2c019d5da1a29445291bb4a40085c40c"
 dependencies = [
  "proc-macro2 1.0.47",
  "quote 1.0.21",
@@ -400,9 +402,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-macros"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e738a4d372a24c4194250859a310db4a2c019d5da1a29445291bb4a40085c40c"
+version = "0.2.7"
 dependencies = [
  "proc-macro2 1.0.47",
  "quote 1.0.21",
@@ -427,7 +427,7 @@ dependencies = [
 name = "bonfida-utils"
 version = "0.3.1"
 dependencies = [
- "bonfida-macros 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bonfida-macros 0.2.6",
  "borsh",
  "bytemuck",
  "lazy_static",
