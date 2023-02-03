@@ -253,6 +253,24 @@ fn type_to_js(ty: &Type) -> String {
                         unreachable!()
                     };
                 }
+                "Option" => {
+                    if let PathArguments::AngleBracketed(AngleBracketedGenericArguments {
+                        colon2_token: _,
+                        lt_token: _,
+                        args,
+                        gt_token: _,
+                    }) = &segment.arguments
+                    {
+                        if let GenericArgument::Type(t) = args.first().unwrap() {
+                            let inner_type = type_to_js(t);
+                            return format!("{} | null", &inner_type);
+                        } else {
+                            unimplemented!()
+                        }
+                    } else {
+                        unreachable!()
+                    };
+                }
                 _ => "number".to_owned(), // We assume this is an enum
             }
         }
