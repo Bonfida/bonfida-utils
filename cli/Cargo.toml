@@ -1,5 +1,5 @@
 [package]
-name = "cli"
+name = "bonfida-cli"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,10 +7,10 @@ edition = "2021"
 
 [dependencies]
 clap = "3.2.6"
-autobindings = {path = "../autobindings"}
-autodoc = {path = "../autodoc"}
-autoproject = {path = "../autoproject"}
-benchviz = {path = "../benchviz"}
+bonfida-autobindings = {path = "../autobindings"}
+bonfida-autodoc = {path = "../autodoc"}
+bonfida-autoproject = {path = "../autoproject"}
+bonfida-benchviz = {path = "../benchviz"}
 
 [[bin]]
 name = "bonfida"

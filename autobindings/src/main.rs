@@ -1,4 +1,4 @@
-use autobindings::{command, process};
+use bonfida_autobindings::{command, process};
 
 pub fn main() {
     let command = command();

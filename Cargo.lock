@@ -247,52 +247,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "autobindings"
-version = "0.1.0"
-dependencies = [
- "anchor-syn",
- "cargo_toml",
- "clap 3.2.23",
- "convert_case",
- "hex",
- "proc-macro2 1.0.47",
- "rand 0.8.5",
- "serde",
- "serde_json",
- "syn 1.0.105",
- "utf8",
-]
-
-[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
-
-[[package]]
-name = "autodoc"
-version = "0.1.0"
-dependencies = [
- "clap 3.2.23",
- "convert_case",
- "proc-macro2 1.0.47",
- "quote 1.0.21",
- "rustfmt-wrapper",
- "syn 1.0.105",
-]
-
-[[package]]
-name = "autoproject"
-version = "0.1.1"
-dependencies = [
- "clap 3.2.23",
- "convert_case",
- "fs_extra",
- "include_dir",
- "path-absolutize",
- "proc-macro2 1.0.47",
- "syn 1.0.105",
-]
 
 [[package]]
 name = "base64"
@@ -311,18 +269,6 @@ name = "base64ct"
 version = "1.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b645a089122eccb6111b4f81cbc1a49f5900ac4666bb93ac027feaecf15607bf"
-
-[[package]]
-name = "benchviz"
-version = "0.1.0"
-dependencies = [
- "bonfida-utils",
- "clap 3.2.23",
- "gnuplot",
- "regex",
- "serde",
- "serde_json",
-]
 
 [[package]]
 name = "bincode"
@@ -386,6 +332,71 @@ name = "block-padding"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
+
+[[package]]
+name = "bonfida-autobindings"
+version = "0.1.0"
+dependencies = [
+ "anchor-syn",
+ "cargo_toml",
+ "clap 3.2.23",
+ "convert_case",
+ "hex",
+ "proc-macro2 1.0.47",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+ "syn 1.0.105",
+ "utf8",
+]
+
+[[package]]
+name = "bonfida-autodoc"
+version = "0.1.0"
+dependencies = [
+ "clap 3.2.23",
+ "convert_case",
+ "proc-macro2 1.0.47",
+ "quote 1.0.21",
+ "rustfmt-wrapper",
+ "syn 1.0.105",
+]
+
+[[package]]
+name = "bonfida-autoproject"
+version = "0.1.1"
+dependencies = [
+ "clap 3.2.23",
+ "convert_case",
+ "fs_extra",
+ "include_dir",
+ "path-absolutize",
+ "proc-macro2 1.0.47",
+ "syn 1.0.105",
+]
+
+[[package]]
+name = "bonfida-benchviz"
+version = "0.1.0"
+dependencies = [
+ "bonfida-utils",
+ "clap 3.2.23",
+ "gnuplot",
+ "regex",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "bonfida-cli"
+version = "0.1.0"
+dependencies = [
+ "bonfida-autobindings",
+ "bonfida-autodoc",
+ "bonfida-autoproject",
+ "bonfida-benchviz",
+ "clap 3.2.23",
+]
 
 [[package]]
 name = "bonfida-macros"
@@ -705,17 +716,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2850f2f5a82cbf437dd5af4d49848fbdfc27c157c3d010345776f952765261c5"
 dependencies = [
  "os_str_bytes",
-]
-
-[[package]]
-name = "cli"
-version = "0.1.0"
-dependencies = [
- "autobindings",
- "autodoc",
- "autoproject",
- "benchviz",
- "clap 3.2.23",
 ]
 
 [[package]]

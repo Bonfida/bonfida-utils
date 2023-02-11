@@ -1,5 +1,5 @@
 [package]
-name = "autodoc"
+name = "bonfida-autodoc"
 version = "0.1.0"
 edition = "2021"
 

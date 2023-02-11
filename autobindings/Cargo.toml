@@ -1,5 +1,5 @@
 [package]
-name = "autobindings"
+name = "bonfida-autobindings"
 description = "Utility to generate JavaScript and python bindings for Solana smart contracts following the Bonfida code conventions"
 license = "MIT"
 version = "0.1.0"

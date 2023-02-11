@@ -1,5 +1,5 @@
 [package]
-name = "autoproject"
+name = "bonfida-autoproject"
 description = "Utility to generate a solana smart contract template"
 license = "MIT"
 version = "0.1.1"
