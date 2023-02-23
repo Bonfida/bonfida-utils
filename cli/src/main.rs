@@ -3,10 +3,10 @@ use clap::Command;
 fn main() {
     let matches = Command::new("bonfida")
         .about("Development utils for Solana programs written in the Bonfida style")
-        .subcommand(bonfida_autobindings::command())
-        .subcommand(bonfida_autodoc::command())
-        .subcommand(bonfida_autoproject::command())
-        .subcommand(bonfida_benchviz::command())
+        .subcommand(bonfida_autobindings::command().name("autobindings"))
+        .subcommand(bonfida_autodoc::command().name("autodoc"))
+        .subcommand(bonfida_autoproject::command().name("autoproject"))
+        .subcommand(bonfida_benchviz::command().name("benchviz"))
         .subcommand_required(true)
         .arg_required_else_help(true)
         .get_matches();
