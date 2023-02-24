@@ -6,8 +6,8 @@ use syn::{
 };
 
 use crate::{
-    find_struct, get_constraints, get_simple_type, get_struct_fields, is_option, is_slice,
-    padding_len, snake_to_camel,
+    find_struct, get_constraints, get_struct_fields, is_option, is_slice, padding_len,
+    snake_to_camel,
 };
 
 pub fn js_process_file(
@@ -166,55 +166,17 @@ pub fn js_process_file(
 
 fn js_type_assignment(ty: &Type, camel_case_ident: &str) -> String {
     match ty {
-        Type::Path(_) => {
-            let simple_type = get_simple_type(ty);
-            match simple_type.as_ref() {
-                "i8" | "i16" | "i32" => {
-                    let bit_width = simple_type[1..].parse::<u8>().unwrap();
-                    format!(
-                        "this.{} = new BN(obj.{}).fromTwos({}).toNumber();",
-                        camel_case_ident, camel_case_ident, bit_width
-                    )
-                }
-                "i64" | "i128" => {
-                    let bit_width = simple_type[1..].parse::<u8>().unwrap();
-                    format!(
-                        "this.{} = obj.{}.fromTwos({});",
-                        camel_case_ident, camel_case_ident, bit_width
-                    )
-                }
-                _ => format!("this.{} = obj.{};", camel_case_ident, camel_case_ident),
-            }
-        }
+        Type::Path(_) => format!("this.{} = obj.{};", camel_case_ident, camel_case_ident),
         Type::Array(TypeArray {
             bracket_token: _,
-            elem,
+            elem: _,
             semi_token: _,
             len:
                 Expr::Lit(ExprLit {
                     attrs: _,
                     lit: Lit::Int(_),
                 }),
-        }) => {
-            let simple_type = get_simple_type(elem);
-            match &simple_type as &str {
-                "i8" | "i16" | "i32" => {
-                    let bit_width = simple_type[1..].parse::<u8>().unwrap();
-                    format!(
-                        "this.{} = obj.{}.map(o => new BN(o).fromTwos({}).toNumber());",
-                        camel_case_ident, camel_case_ident, bit_width
-                    )
-                }
-                "i64" | "i128" => {
-                    let bit_width = simple_type[1..].parse::<u8>().unwrap();
-                    format!(
-                        "this.{} = obj.{}.map(o => o.fromTwos({}));",
-                        camel_case_ident, camel_case_ident, bit_width
-                    )
-                }
-                _ => format!("this.{} = obj.{};", camel_case_ident, camel_case_ident),
-            }
-        }
+        }) => format!("this.{} = obj.{};", camel_case_ident, camel_case_ident),
         _ => unimplemented!(),
     }
 }

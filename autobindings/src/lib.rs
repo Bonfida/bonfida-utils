@@ -251,6 +251,7 @@ pub fn get_header(target_lang: TargetLang) -> String {
     }
 }
 
+#[allow(dead_code)]
 fn get_simple_type(ty: &Type) -> String {
     match ty {
         Type::Path(TypePath {
