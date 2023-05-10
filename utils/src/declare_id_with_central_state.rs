@@ -17,5 +17,10 @@ mod tests {
         assert_eq!(central_state, test_context::central_state::KEY);
         assert_eq!(central_state_nonce, test_context::central_state::NONCE);
         assert_eq!(program_id, test_context::ID);
+        assert_eq!(program_id.to_bytes(), test_context::ID_BYTES);
+        assert_eq!(
+            [(&program_id.to_bytes() as &[u8]), &[central_state_nonce]],
+            test_context::central_state::SIGNER_SEEDS
+        );
     }
 }

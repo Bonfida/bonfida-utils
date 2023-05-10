@@ -427,7 +427,7 @@ dependencies = [
 name = "bonfida-benchviz"
 version = "0.1.0"
 dependencies = [
- "bonfida-utils 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bonfida-utils 0.3.2",
  "clap 3.2.23",
  "gnuplot",
  "regex",
@@ -441,7 +441,7 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "057deece711b151b3a08f705d5c6119dc25156a12cfbf1ff44ea7e358931edf6"
 dependencies = [
- "bonfida-utils 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bonfida-utils 0.3.2",
  "clap 3.2.23",
  "gnuplot",
  "regex",
@@ -463,6 +463,8 @@ dependencies = [
 [[package]]
 name = "bonfida-macros"
 version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d47e29f573015689aab660e16bd63dc7272cf8d490729fbb9e07cfc5a7ada198"
 dependencies = [
  "proc-macro2 1.0.47",
  "quote 1.0.21",
@@ -473,9 +475,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-macros"
-version = "0.2.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d47e29f573015689aab660e16bd63dc7272cf8d490729fbb9e07cfc5a7ada198"
+version = "0.2.8"
 dependencies = [
  "proc-macro2 1.0.47",
  "quote 1.0.21",
@@ -499,8 +499,26 @@ dependencies = [
 [[package]]
 name = "bonfida-utils"
 version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d324917eb29a5ddfaa33e006cff592d76bdc0b73543eb031cd05ee3e2ef1181b"
 dependencies = [
- "bonfida-macros 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bonfida-macros 0.2.7",
+ "borsh",
+ "bytemuck",
+ "lazy_static",
+ "pyth-sdk-solana",
+ "regex",
+ "serde",
+ "serde_json",
+ "solana-program",
+ "spl-token",
+]
+
+[[package]]
+name = "bonfida-utils"
+version = "0.3.3"
+dependencies = [
+ "bonfida-macros 0.2.8",
  "borsh",
  "bytemuck",
  "lazy_static",
@@ -509,24 +527,6 @@ dependencies = [
  "serde",
  "serde_json",
  "solana-client",
- "solana-program",
- "spl-token",
-]
-
-[[package]]
-name = "bonfida-utils"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d324917eb29a5ddfaa33e006cff592d76bdc0b73543eb031cd05ee3e2ef1181b"
-dependencies = [
- "bonfida-macros 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "borsh",
- "bytemuck",
- "lazy_static",
- "pyth-sdk-solana",
- "regex",
- "serde",
- "serde_json",
  "solana-program",
  "spl-token",
 ]
