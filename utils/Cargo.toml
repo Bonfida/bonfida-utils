@@ -1,6 +1,6 @@
 [package]
 name = "bonfida-utils"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["ellttBen <elliott@bonfida.com>"]
 description = "Various solana program writing utilities in use by Bonfida."
 license = "MIT"
@@ -25,4 +25,4 @@ serde_json = {version = "1.0.79",  optional=true}
 spl-token = {version = "3.2.0", features = ["no-entrypoint"]}
 
 [dev-dependencies]
-solana-client = "1.9"
+solana-client = "1.9"   

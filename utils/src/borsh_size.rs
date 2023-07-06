@@ -5,6 +5,12 @@ pub trait BorshSize: BorshDeserialize + BorshSerialize {
     fn borsh_len(&self) -> usize;
 }
 
+impl BorshSize for () {
+    fn borsh_len(&self) -> usize {
+        0
+    }
+}
+
 impl BorshSize for u8 {
     fn borsh_len(&self) -> usize {
         1
