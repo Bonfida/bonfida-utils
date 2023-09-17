@@ -1,7 +1,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{program_error::ProgramError, pubkey::Pubkey};
 
-use crate::error::TOBEREPLACEDBY_PASCALError;
+use crate::error::Error;
 
 #[derive(BorshSerialize, BorshDeserialize)]
 #[allow(missing_docs)]
@@ -23,7 +23,7 @@ impl ExampleStateBorsh {
     pub fn from_buffer(buffer: &[u8], expected_tag: super::Tag) -> Result<Self, ProgramError> {
         let (tag, mut buffer) = buffer.split_at(8);
         if *bytemuck::from_bytes::<u64>(tag) != expected_tag as u64 {
-            return Err(TOBEREPLACEDBY_PASCALError::DataTypeMismatch.into());
+            return Err(Error::DataTypeMismatch.into());
         }
         Ok(Self::deserialize(&mut buffer)?)
     }

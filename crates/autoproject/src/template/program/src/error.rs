@@ -5,7 +5,7 @@ use {
 };
 
 #[derive(Clone, Debug, Error, FromPrimitive)]
-pub enum TOBEREPLACEDBY_PASCALError {
+pub enum Error {
     #[error("This account is already initialized")]
     AlreadyInitialized,
     #[error("Data type mismatch")]
@@ -16,13 +16,13 @@ pub enum TOBEREPLACEDBY_PASCALError {
     Uninitialized,
 }
 
-impl From<TOBEREPLACEDBY_PASCALError> for ProgramError {
-    fn from(e: TOBEREPLACEDBY_PASCALError) -> Self {
+impl From<Error> for ProgramError {
+    fn from(e: Error) -> Self {
         ProgramError::Custom(e as u32)
     }
 }
 
-impl<T> DecodeError<T> for TOBEREPLACEDBY_PASCALError {
+impl<T> DecodeError<T> for Error {
     fn type_of() -> &'static str {
         "TOBEREPLACEDBY_PASCALError"
     }

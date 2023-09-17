@@ -9,10 +9,10 @@ edition = "2021"
 
 [dependencies]
 clap = "3.2.6"
-bonfida-autobindings = "0.1"
-bonfida-autodoc = "0.1"
-bonfida-autoproject = "0.1"
-bonfida-benchviz = "0.1"
+bonfida-autobindings = {version = "0.1", path="../autobindings"}
+bonfida-autodoc = {version = "0.1", path="../autodoc"}
+bonfida-autoproject = {version = "0.1", path="../autoproject"}
+bonfida-benchviz = {version = "0.1", path="../benchviz"}
 
 [[bin]]
 name = "bonfida"

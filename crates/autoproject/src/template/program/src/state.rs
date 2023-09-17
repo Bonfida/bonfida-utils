@@ -1,4 +1,4 @@
-use crate::error::TOBEREPLACEDBY_PASCALError;
+use crate::error::Error;
 
 use {
     bonfida_utils::BorshSize,
