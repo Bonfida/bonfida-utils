@@ -1,7 +1,7 @@
 use bytemuck::{Pod, Zeroable};
 use solana_program::pubkey::Pubkey;
 
-use crate::error::TOBEREPLACEDBY_PASCALError;
+use crate::error::Error;
 
 #[derive(Clone, Copy, Zeroable, Pod)]
 #[allow(missing_docs)]
@@ -20,23 +20,20 @@ impl ExampleStateCast {
 impl ExampleStateCast {
     pub const SEED: &'static [u8; 12] = b"example_seed";
 
-    pub fn initialize(buffer: &mut [u8]) -> Result<(), TOBEREPLACEDBY_PASCALError> {
+    pub fn initialize(buffer: &mut [u8]) -> Result<(), Error> {
         let (tag, _) = buffer.split_at_mut(8);
         let tag: &mut u64 = bytemuck::from_bytes_mut(tag);
         if *tag != super::Tag::Uninitialized as u64 {
-            return Err(TOBEREPLACEDBY_PASCALError::DataTypeMismatch.into());
+            return Err(Error::DataTypeMismatch.into());
         }
         *tag = super::Tag::ExampleStateCast as u64;
         Ok(())
     }
 
-    pub fn from_buffer(
-        buffer: &mut [u8],
-        expected_tag: super::Tag,
-    ) -> Result<&mut Self, TOBEREPLACEDBY_PASCALError> {
+    pub fn from_buffer(buffer: &mut [u8], expected_tag: super::Tag) -> Result<&mut Self, Error> {
         let (tag, buffer) = buffer.split_at_mut(8);
         if *bytemuck::from_bytes_mut::<u64>(tag) != expected_tag as u64 {
-            return Err(TOBEREPLACEDBY_PASCALError::DataTypeMismatch.into());
+            return Err(Error::DataTypeMismatch.into());
         }
         Ok(bytemuck::from_bytes_mut(buffer))
     }

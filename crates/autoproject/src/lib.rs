@@ -74,6 +74,7 @@ pub fn generate(project_name: &str, project_path: &str) {
 
     for file_path_str in directory {
         let file_path = Path::new(&file_path_str);
+        eprintln!("{file_path:?}");
         let mut raw_file = std::fs::read_to_string(&file_path).unwrap();
 
         for case_id_str in CASE_STR_ID.iter() {
@@ -88,7 +89,7 @@ pub fn generate(project_name: &str, project_path: &str) {
         let mut out_file = OpenOptions::new()
             .write(true)
             .truncate(true)
-            .open(&file_path)
+            .open(file_path)
             .unwrap();
         out_file.write_all(raw_file.as_bytes()).unwrap();
     }
