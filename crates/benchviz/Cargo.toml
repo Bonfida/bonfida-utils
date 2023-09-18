@@ -4,6 +4,7 @@ version = "0.3.5"
 description = "Utility for visualizing Solana Program benchmark results"
 license = "MIT"
 edition = "2021"
+repository = "https://github.com/Bonfida/bonfida-utils.git"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

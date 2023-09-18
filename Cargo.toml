@@ -1,3 +1,4 @@
 [workspace]
 members = ["crates/*"]
 exclude = ["crates/autoproject/src/template"]
+resolver = "2"
