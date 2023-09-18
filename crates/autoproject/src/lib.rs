@@ -5,9 +5,10 @@ use include_dir::{include_dir, Dir};
 use path_absolutize::Absolutize;
 
 use std::{
+    ffi::OsStr,
     fs::{self, OpenOptions},
     io::Write,
-    path::Path,
+    path::PathBuf,
     str::FromStr,
     time::Instant,
 };
@@ -73,8 +74,14 @@ pub fn generate(project_name: &str, project_path: &str) {
     let directory = get_dir_content(project_dir).unwrap().files;
 
     for file_path_str in directory {
-        let file_path = Path::new(&file_path_str);
+        let mut file_path = PathBuf::from(file_path_str);
         eprintln!("{file_path:?}");
+        if file_path.file_name() == Some(OsStr::new("_Cargo.toml")) {
+            let mut new_file_path = file_path.to_owned();
+            new_file_path.set_file_name("Cargo.toml");
+            std::fs::rename(file_path, &new_file_path).unwrap();
+            file_path = new_file_path;
+        }
         let mut raw_file = std::fs::read_to_string(&file_path).unwrap();
 
         for case_id_str in CASE_STR_ID.iter() {
