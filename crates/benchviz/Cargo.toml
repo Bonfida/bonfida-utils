@@ -1,6 +1,6 @@
 [package]
 name = "bonfida-benchviz"
-version = "0.3.5"
+version = "0.3.6"
 description = "Utility for visualizing Solana Program benchmark results"
 license = "MIT"
 edition = "2021"
@@ -13,5 +13,5 @@ gnuplot = "0.0.37"
 serde = {version = "1", features = ["derive"]}
 serde_json = "1"
 regex = "1"
-bonfida-utils = {version = "0.3.5", path="../utils", features = ["benchmarking"]}
+bonfida-utils = {version = "0.3.6", path="../utils", features = ["benchmarking"]}
 clap = {version = "3.2.6", features = ["cargo"]}

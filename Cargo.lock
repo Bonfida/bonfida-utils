@@ -353,7 +353,7 @@ checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
 
 [[package]]
 name = "bonfida-autobindings"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "anchor-syn",
  "cargo_toml",
@@ -370,7 +370,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-autodoc"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "clap 3.2.25",
  "convert_case",
@@ -382,7 +382,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-autoproject"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "clap 3.2.25",
  "convert_case",
@@ -395,7 +395,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-benchviz"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "bonfida-utils",
  "clap 3.2.25",
@@ -407,7 +407,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-cli"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "bonfida-autobindings",
  "bonfida-autodoc",
@@ -418,7 +418,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-macros"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "proc-macro2 1.0.67",
  "quote 1.0.33",
@@ -429,7 +429,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-test-utils"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "async-trait",
  "solana-program",
@@ -441,7 +441,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-utils"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "bonfida-macros",
  "borsh",
