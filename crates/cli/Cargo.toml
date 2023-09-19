@@ -1,6 +1,6 @@
 [package]
 name = "bonfida-cli"
-version = "0.3.9"
+version = "0.3.10"
 description = "Bonfida CLI utilities for Solana development"
 license = "MIT"
 edition = "2021"
@@ -10,10 +10,10 @@ repository = "https://github.com/Bonfida/bonfida-utils.git"
 
 [dependencies]
 clap = "3.2.6"
-bonfida-autobindings = {version = "0.3.9", path="../autobindings"}
-bonfida-autodoc = {version = "0.3.9", path="../autodoc"}
-bonfida-autoproject = {version = "0.3.9", path="../autoproject"}
-bonfida-benchviz = {version = "0.3.9", path="../benchviz"}
+bonfida-autobindings = {version = "0.3.10", path="../autobindings"}
+bonfida-autodoc = {version = "0.3.10", path="../autodoc"}
+bonfida-autoproject = {version = "0.3.10", path="../autoproject"}
+bonfida-benchviz = {version = "0.3.10", path="../benchviz"}
 
 [[bin]]
 name = "bonfida"
