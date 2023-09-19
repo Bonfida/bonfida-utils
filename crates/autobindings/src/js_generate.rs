@@ -193,7 +193,7 @@ fn type_to_js(ty: &Type) -> String {
             let segment = segments.iter().next().unwrap();
             let simple_type = segment.ident.to_string();
             match simple_type.as_ref() {
-                "bool" => "bool".to_owned(),
+                "bool" => "boolean".to_owned(),
                 "u8" | "u16" | "u32" | "i8" | "i16" | "i32" => "number".to_owned(),
                 "u64" | "u128" | "i64" | "i128" => "BN".to_owned(),
                 "String" => "string".to_owned(),
