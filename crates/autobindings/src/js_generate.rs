@@ -193,6 +193,7 @@ fn type_to_js(ty: &Type) -> String {
             let segment = segments.iter().next().unwrap();
             let simple_type = segment.ident.to_string();
             match simple_type.as_ref() {
+                "bool" => "bool".to_owned(),
                 "u8" | "u16" | "u32" | "i8" | "i16" | "i32" => "number".to_owned(),
                 "u64" | "u128" | "i64" | "i128" => "BN".to_owned(),
                 "String" => "string".to_owned(),
@@ -271,7 +272,7 @@ fn type_to_borsh_js(ty: &Type) -> String {
             let segment = segments.iter().next().unwrap();
             let simple_type = segment.ident.to_string();
             let t = match simple_type.as_ref() {
-                "u8" | "u16" | "u32" | "u64" | "u128" => simple_type,
+                "u8" | "u16" | "u32" | "u64" | "u128" | "bool" => simple_type,
                 "i8" | "i16" | "i32" | "i64" | "i128" => {
                     let mut res = "u".to_owned();
                     <String as std::fmt::Write>::write_str(&mut res, &simple_type[1..]).unwrap();
