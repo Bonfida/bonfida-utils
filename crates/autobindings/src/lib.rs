@@ -1,7 +1,7 @@
 use anchor_syn::idl::Idl;
 use cargo_toml::Manifest;
 use clap::{crate_name, crate_version, Arg, ArgMatches, Command};
-use convert_case::{Case, Casing};
+use convert_case::{Boundary, Case, Casing};
 use idl_generate::{idl_process_file, idl_process_state_file};
 use proc_macro2::TokenTree;
 use std::{
@@ -255,12 +255,12 @@ pub fn get_header(target_lang: TargetLang) -> String {
 fn get_simple_type(ty: &Type) -> String {
     match ty {
         Type::Path(TypePath {
-            qself: _,
-            path: Path {
-                leading_colon: _,
-                segments,
-            },
-        }) => segments.iter().next().unwrap().ident.to_string(),
+                       qself: _,
+                       path: Path {
+                           leading_colon: _,
+                           segments,
+                       },
+                   }) => segments.iter().next().unwrap().ident.to_string(),
         _ => unimplemented!(),
     }
 }
@@ -268,9 +268,9 @@ fn get_simple_type(ty: &Type) -> String {
 fn padding_len(ty: &Type) -> u8 {
     match ty {
         Type::Path(TypePath {
-            path: Path { segments, .. },
-            ..
-        }) => {
+                       path: Path { segments, .. },
+                       ..
+                   }) => {
             let simple_type = segments.iter().next().unwrap().ident.to_string();
             match simple_type.as_ref() {
                 "u8" => 1,
@@ -282,27 +282,38 @@ fn padding_len(ty: &Type) -> u8 {
             }
         }
         Type::Array(TypeArray {
-            elem,
-            len: Expr::Lit(ExprLit {
-                lit: Lit::Int(l), ..
-            }),
-            ..
-        }) => padding_len(elem) * l.base10_parse::<u8>().unwrap(),
+                        elem,
+                        len: Expr::Lit(ExprLit {
+                                           lit: Lit::Int(l), ..
+                                       }),
+                        ..
+                    }) => padding_len(elem) * l.base10_parse::<u8>().unwrap(),
         _ => unimplemented!(),
     }
 }
 
 fn snake_to_camel(s: &str) -> String {
-    s.from_case(Case::Snake).to_case(Case::Camel)
+    s.from_case(Case::Snake).
+        without_boundaries(&[Boundary::UpperDigit, Boundary::LowerDigit]).
+        to_case(Case::Camel)
 }
+
 fn snake_to_pascal(s: &str) -> String {
-    s.from_case(Case::Snake).to_case(Case::Pascal)
+    s.from_case(Case::Snake).
+        without_boundaries(&[Boundary::UpperDigit, Boundary::LowerDigit]).
+        to_case(Case::Pascal)
 }
+
 fn pascal_to_snake(s: &str) -> String {
-    s.from_case(Case::Pascal).to_case(Case::Snake)
+    s.from_case(Case::Pascal).
+        without_boundaries(&[Boundary::UpperDigit, Boundary::LowerDigit]).
+        to_case(Case::Snake)
 }
+
 fn lower_to_upper(s: &str) -> String {
-    s.from_case(Case::Lower).to_case(Case::Upper)
+    s.from_case(Case::Lower).
+        without_boundaries(&[Boundary::UpperDigit, Boundary::LowerDigit]).
+        to_case(Case::Upper)
 }
 
 fn find_struct(file_ast: &syn::File, ident_str: Option<&str>) -> Item {
@@ -345,9 +356,9 @@ fn get_enum_variants(s: Item) -> Punctuated<Variant, Comma> {
 
 fn get_struct_fields(s: Item) -> Punctuated<Field, Comma> {
     if let Item::Struct(ItemStruct {
-        fields: Fields::Named(FieldsNamed { named, .. }),
-        ..
-    }) = s
+                            fields: Fields::Named(FieldsNamed { named, .. }),
+                            ..
+                        }) = s
     {
         named
     } else {
