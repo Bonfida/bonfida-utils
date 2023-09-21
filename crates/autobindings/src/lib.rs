@@ -255,12 +255,12 @@ pub fn get_header(target_lang: TargetLang) -> String {
 fn get_simple_type(ty: &Type) -> String {
     match ty {
         Type::Path(TypePath {
-                       qself: _,
-                       path: Path {
-                           leading_colon: _,
-                           segments,
-                       },
-                   }) => segments.iter().next().unwrap().ident.to_string(),
+            qself: _,
+            path: Path {
+                leading_colon: _,
+                segments,
+            },
+        }) => segments.iter().next().unwrap().ident.to_string(),
         _ => unimplemented!(),
     }
 }
@@ -268,9 +268,9 @@ fn get_simple_type(ty: &Type) -> String {
 fn padding_len(ty: &Type) -> u8 {
     match ty {
         Type::Path(TypePath {
-                       path: Path { segments, .. },
-                       ..
-                   }) => {
+            path: Path { segments, .. },
+            ..
+        }) => {
             let simple_type = segments.iter().next().unwrap().ident.to_string();
             match simple_type.as_ref() {
                 "u8" => 1,
@@ -282,12 +282,12 @@ fn padding_len(ty: &Type) -> u8 {
             }
         }
         Type::Array(TypeArray {
-                        elem,
-                        len: Expr::Lit(ExprLit {
-                                           lit: Lit::Int(l), ..
-                                       }),
-                        ..
-                    }) => padding_len(elem) * l.base10_parse::<u8>().unwrap(),
+            elem,
+            len: Expr::Lit(ExprLit {
+                lit: Lit::Int(l), ..
+            }),
+            ..
+        }) => padding_len(elem) * l.base10_parse::<u8>().unwrap(),
         _ => unimplemented!(),
     }
 }
@@ -356,9 +356,9 @@ fn get_enum_variants(s: Item) -> Punctuated<Variant, Comma> {
 
 fn get_struct_fields(s: Item) -> Punctuated<Field, Comma> {
     if let Item::Struct(ItemStruct {
-                            fields: Fields::Named(FieldsNamed { named, .. }),
-                            ..
-                        }) = s
+        fields: Fields::Named(FieldsNamed { named, .. }),
+        ..
+    }) = s
     {
         named
     } else {
