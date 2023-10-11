@@ -96,16 +96,23 @@ pub fn process(mut ast: syn::DeriveInput) -> TokenStream {
                         .iter()
                         .next()
                         .unwrap_or_else(|| panic!("{}", line!().to_string()));
-                    if seg.ident != "Option" {
-                        unimplemented!()
+                    match seg.ident.to_string().as_str() {
+                        "Option" => function_body.stmts.push(account_push_option(
+                            n.ident
+                                .clone()
+                                .unwrap_or_else(|| panic!("{}", line!().to_string())),
+                            writable,
+                            signer,
+                        )),
+                        "Vec" => function_body.stmts.push(account_push_vec(
+                            n.ident
+                                .clone()
+                                .unwrap_or_else(|| panic!("{}", line!().to_string())),
+                            writable,
+                            signer,
+                        )),
+                        _ => unimplemented!(),
                     }
-                    function_body.stmts.push(account_push_option(
-                        n.ident
-                            .clone()
-                            .unwrap_or_else(|| panic!("{}", line!().to_string())),
-                        writable,
-                        signer,
-                    ))
                 }
                 _ => {
                     panic!()
@@ -153,6 +160,24 @@ fn account_push_option(ident: Ident, writable: bool, signer: bool) -> Stmt {
             if let Some(k) = self.#ident {
                 accounts_vec.push(AccountMeta::new_readonly(*k, #signer));
             };
+        )
+        .try_into()
+        .unwrap_or_else(|_| panic!("{}", line!().to_string()))
+    };
+    syn::parse(t).unwrap_or_else(|_| panic!("{}", line!().to_string()))
+}
+
+fn account_push_vec(ident: Ident, writable: bool, signer: bool) -> Stmt {
+    let t: TokenStream = if writable {
+        quote!(
+            accounts_vec.extend(#ident.iter().map(|k| AccountMeta::new(*k, #signer)));
+        )
+        .try_into()
+        .unwrap_or_else(|_| panic!("{}", line!().to_string()))
+    } else {
+        quote!(
+            accounts_vec.extend(self.#ident.iter().map(|k| AccountMeta::new_readonly(**k, #signer)));
+
         )
         .try_into()
         .unwrap_or_else(|_| panic!("{}", line!().to_string()))

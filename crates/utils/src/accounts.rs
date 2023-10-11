@@ -84,24 +84,28 @@ mod tests {
 
     #[cfg(feature = "instruction_params_casting")]
     use bytemuck::{Pod, Zeroable};
-    #[derive(InstructionsAccount, Clone)]
-    pub struct Accounts<'a, T> {
-        #[cons(writable)]
-        a: &'a T,
-        b: &'a T,
-        #[cons(writable)]
-        c: &'a [T],
-        d: &'a [T],
-        #[cons(writable, signer)]
-        e: &'a T,
-        #[cons(signer)]
-        f: &'a T,
-        #[cons(writable, signer)]
-        g: &'a [T],
-        #[cons(signer)]
-        h: &'a [T],
-        #[cons(signer)]
-        i: Option<&'a T>,
+
+    mod accounts {
+        use super::*;
+        #[derive(InstructionsAccount, Clone)]
+        pub struct Accounts<'a, T> {
+            #[cons(writable)]
+            pub a: &'a T,
+            pub b: &'a T,
+            #[cons(writable)]
+            pub c: &'a [T],
+            pub d: &'a [T],
+            #[cons(writable, signer)]
+            pub e: &'a T,
+            #[cons(signer)]
+            pub f: &'a T,
+            #[cons(writable, signer)]
+            pub g: &'a [T],
+            #[cons(signer)]
+            pub h: &'a [T],
+            #[cons(signer)]
+            pub i: Option<&'a T>,
+        }
     }
     #[derive(BorshDeserialize, BorshSerialize, BorshSize, Clone, Copy)]
     #[cfg_attr(feature = "instruction_params_casting", derive(Zeroable, Pod))]
@@ -109,11 +113,35 @@ mod tests {
     pub struct Params {
         pub match_limit: u64,
     }
+
+    mod accounts_with_vec {
+        use super::*;
+        #[derive(InstructionsAccount, Clone)]
+        pub struct Accounts<'a, T> {
+            #[cons(writable)]
+            pub a: &'a T,
+            pub b: &'a T,
+            #[cons(writable)]
+            pub c: &'a [T],
+            pub d: &'a [T],
+            #[cons(writable, signer)]
+            pub e: &'a T,
+            #[cons(signer)]
+            pub f: &'a T,
+            #[cons(writable, signer)]
+            pub g: &'a [T],
+            #[cons(signer)]
+            pub h: &'a [T],
+            #[cons(signer)]
+            pub i: Vec<&'a T>,
+        }
+    }
+
     #[test]
     #[allow(clippy::bool_assert_comparison)]
     fn functional_0() {
-        let k = Pubkey::new_unique();
-        let a = Accounts {
+        let i = Pubkey::new_unique();
+        let a = accounts::Accounts {
             a: &Pubkey::new_unique(),
             b: &Pubkey::new_unique(),
             c: &[Pubkey::new_unique()],
@@ -122,7 +150,7 @@ mod tests {
             f: &Pubkey::new_unique(),
             g: &[Pubkey::new_unique()],
             h: &[Pubkey::new_unique()],
-            i: Some(&k),
+            i: Some(&i),
         };
         let params = Params { match_limit: 46 };
         let instruction = a.get_instruction(crate::ID, 0, params);
@@ -154,6 +182,72 @@ mod tests {
         assert_eq!(instruction.accounts[8].is_writable, false);
         assert_eq!(instruction.accounts[8].is_signer, true);
         assert_eq!(instruction.accounts[8].pubkey, *a.i.unwrap());
+        let mut instruction_data = vec![0];
+        instruction_data.extend(&params.try_to_vec().unwrap());
+
+        assert_eq!(instruction_data, instruction.data);
+
+        #[cfg(feature = "instruction_params_casting")]
+        {
+            let instruction = a.get_instruction_cast(crate::ID, 0, params);
+            let mut instruction_data = [0; 8].to_vec();
+            instruction_data.extend(bytemuck::bytes_of(&params));
+
+            assert_eq!(instruction_data, instruction.data);
+        }
+    }
+
+    #[test]
+    #[allow(clippy::bool_assert_comparison)]
+    fn functional_1() {
+        let i = (0..4).map(|_| Pubkey::new_unique()).collect::<Vec<_>>();
+        let a = accounts_with_vec::Accounts {
+            a: &Pubkey::new_unique(),
+            b: &Pubkey::new_unique(),
+            c: &[Pubkey::new_unique()],
+            d: &[Pubkey::new_unique()],
+            e: &Pubkey::new_unique(),
+            f: &Pubkey::new_unique(),
+            g: &[Pubkey::new_unique()],
+            h: &[Pubkey::new_unique()],
+            i: vec![&i[0], &i[1], &i[2], &i[3]],
+        };
+        let params = Params { match_limit: 46 };
+        let instruction = a.get_instruction(crate::ID, 0, params);
+        assert_eq!(instruction.accounts[0].is_writable, true);
+        assert_eq!(instruction.accounts[0].is_signer, false);
+        assert_eq!(instruction.accounts[0].pubkey, *a.a);
+        assert_eq!(instruction.accounts[1].is_writable, false);
+        assert_eq!(instruction.accounts[1].is_signer, false);
+        assert_eq!(instruction.accounts[1].pubkey, *a.b);
+        assert_eq!(instruction.accounts[2].is_writable, true);
+        assert_eq!(instruction.accounts[2].is_signer, false);
+        assert_eq!(instruction.accounts[2].pubkey, a.c[0]);
+        assert_eq!(instruction.accounts[3].is_writable, false);
+        assert_eq!(instruction.accounts[3].is_signer, false);
+        assert_eq!(instruction.accounts[3].pubkey, a.d[0]);
+
+        assert_eq!(instruction.accounts[4].is_writable, true);
+        assert_eq!(instruction.accounts[4].is_signer, true);
+        assert_eq!(instruction.accounts[4].pubkey, *a.e);
+        assert_eq!(instruction.accounts[5].is_writable, false);
+        assert_eq!(instruction.accounts[5].is_signer, true);
+        assert_eq!(instruction.accounts[5].pubkey, *a.f);
+        assert_eq!(instruction.accounts[6].is_writable, true);
+        assert_eq!(instruction.accounts[6].is_signer, true);
+        assert_eq!(instruction.accounts[6].pubkey, a.g[0]);
+        assert_eq!(instruction.accounts[7].is_writable, false);
+        assert_eq!(instruction.accounts[7].is_signer, true);
+        assert_eq!(instruction.accounts[7].pubkey, a.h[0]);
+        assert_eq!(instruction.accounts[8].is_writable, false);
+        assert_eq!(instruction.accounts[8].is_signer, true);
+        assert_eq!(instruction.accounts[8].pubkey, *a.i[0]);
+        assert_eq!(instruction.accounts[9].is_writable, false);
+        assert_eq!(instruction.accounts[9].is_signer, true);
+        assert_eq!(instruction.accounts[9].pubkey, *a.i[1]);
+        assert_eq!(instruction.accounts[10].is_writable, false);
+        assert_eq!(instruction.accounts[10].is_signer, true);
+        assert_eq!(instruction.accounts[10].pubkey, *a.i[2]);
         let mut instruction_data = vec![0];
         instruction_data.extend(&params.try_to_vec().unwrap());
 
