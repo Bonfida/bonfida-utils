@@ -1,6 +1,6 @@
 [package]
 name = "bonfida-test-utils"
-version = "0.3.11"
+version = "0.3.12"
 authors = ["ellttBen <elliott@bonfida.com>"]
 description = "Solana program testing utilities when working with bonfida-utils."
 license = "MIT"
