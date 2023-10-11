@@ -6,7 +6,7 @@ use syn::{
 };
 
 use crate::{
-    find_struct, get_constraints, get_struct_fields, is_option, is_slice, padding_len,
+    find_struct, get_constraints, get_struct_fields, is_option, is_slice, is_vec, padding_len,
     snake_to_camel,
 };
 
@@ -29,7 +29,7 @@ pub fn js_process_file(
     let mut statements = vec![
         format!("export class {}Instruction {{", snake_to_camel(module_name)),
         if use_casting {
-            "tag: BN;"
+            "tag: bigint;"
         } else {
             "tag: number;"
         }
@@ -37,16 +37,16 @@ pub fn js_process_file(
     ];
     let mut declaration_statements = vec![];
     let mut schema_statements = vec![if use_casting {
-        "[\"tag\", \"u64\"],"
+        "tag: \"u64\","
     } else {
-        "[\"tag\", \"u8\"],"
+        "tag: \"u8\","
     }
     .to_owned()];
     let mut accounts_statements = vec!["programId: PublicKey,".to_owned()];
     let mut keys_statements = vec![];
 
     let mut assign_statements = vec![if use_casting {
-        format!("this.tag = new BN({});", instruction_tag)
+        format!("this.tag = BigInt({});", instruction_tag)
     } else {
         format!("this.tag = {};", instruction_tag)
     }];
@@ -59,11 +59,7 @@ pub fn js_process_file(
     } in params_fields
     {
         let camel_case_ident = snake_to_camel(&ident.as_ref().unwrap().to_string());
-        schema_statements.push(format!(
-            "[\"{}\", {}],",
-            camel_case_ident,
-            type_to_borsh_js(&ty)
-        ));
+        schema_statements.push(format!("{}: {},", camel_case_ident, type_to_borsh_js(&ty)));
         if camel_case_ident == "padding" {
             declaration_statements.push("padding: Uint8Array;".to_owned());
             assign_statements.push(format!(
@@ -113,17 +109,11 @@ pub fn js_process_file(
         }
     }
     statements.extend(declaration_statements.clone());
-    statements.push("static schema: Schema = new Map([".to_owned());
-    statements.push("[".to_owned());
-    statements.push(format!("{}Instruction,", snake_to_camel(module_name)));
-    statements.push("{".to_owned());
-    statements.push("kind: \"struct\",".to_owned());
-    statements.push("fields: [".to_owned());
+    statements.push("static schema = {".to_owned());
+    statements.push("struct : {".to_owned());
     statements.extend(schema_statements.into_iter());
-    statements.push("],".to_owned());
     statements.push("},".to_owned());
-    statements.push("],".to_owned());
-    statements.push("]);".to_owned());
+    statements.push("};".to_owned());
     if declaration_statements.is_empty() {
         statements.push("constructor() {".to_owned());
     } else {
@@ -279,7 +269,7 @@ fn type_to_borsh_js(ty: &Type) -> String {
                     res
                 }
                 "String" => "string".to_owned(),
-                "Pubkey" => return "[32]".to_owned(),
+                "Pubkey" => return "{ array: { type: \"u8\", len: 32 } }".to_owned(),
                 "Vec" => {
                     if let PathArguments::AngleBracketed(AngleBracketedGenericArguments {
                         colon2_token: _,
@@ -290,7 +280,7 @@ fn type_to_borsh_js(ty: &Type) -> String {
                     {
                         if let GenericArgument::Type(t) = args.first().unwrap() {
                             let inner_type = type_to_borsh_js(t);
-                            return format!("[{}]", &inner_type);
+                            return format!("{{ array: {{ type: {} }} }}", &inner_type);
                         } else {
                             unimplemented!()
                         }
@@ -308,7 +298,7 @@ fn type_to_borsh_js(ty: &Type) -> String {
                     {
                         if let GenericArgument::Type(t) = args.first().unwrap() {
                             let inner_type = type_to_borsh_js(t);
-                            return format!("{{ kind: \"option\", type: {}  }}", &inner_type);
+                            return format!("{{ option: {}  }}", &inner_type);
                         } else {
                             unimplemented!()
                         }

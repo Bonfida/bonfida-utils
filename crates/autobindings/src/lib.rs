@@ -396,6 +396,14 @@ fn is_slice(ty: &Type) -> bool {
     false
 }
 
+fn is_vec(ty: &Type) -> bool {
+    if let Type::Path(TypePath { path, .. }) = ty {
+        let seg = path.segments.iter().next().unwrap();
+        return seg.ident == "Vec";
+    }
+    false
+}
+
 fn is_option(ty: &Type) -> bool {
     if let Type::Path(TypePath { path, .. }) = ty {
         let seg = path.segments.iter().next().unwrap();
