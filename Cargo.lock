@@ -614,7 +614,7 @@ name = "bonfida-utils"
 version = "0.3.13"
 dependencies = [
  "bonfida-macros",
- "borsh 0.9.3",
+ "borsh 0.10.3",
  "bytemuck",
  "lazy_static",
  "pyth-sdk-solana",
