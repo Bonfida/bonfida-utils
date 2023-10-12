@@ -15,7 +15,7 @@ benchmarking = ["lazy_static", "regex", "serde", "serde_json"]
 
 [dependencies]
 borsh = "0.9"
-solana-program = "<1.16"
+solana-program = "1.16.16"
 pyth-sdk-solana = "0.4.0"
 bonfida-macros = {version = "0.3.13", path = "../macros"}
 bytemuck = "1.9.1"
@@ -23,7 +23,7 @@ lazy_static = {version = "1.4.0", optional=true}
 regex = {version = "1.5.5", optional=true}
 serde = {version = "1.0.136", features=["derive"], optional=true}
 serde_json = {version = "1.0.79",  optional=true}
-spl-token = {version = "3.2.0", features = ["no-entrypoint"]}
+spl-token = {version = "4.0.0", features = ["no-entrypoint"]}
 
 [dev-dependencies]
-solana-client = "1.9"   
+solana-client = "1.9"
