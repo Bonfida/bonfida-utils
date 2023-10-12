@@ -14,7 +14,7 @@ mock-oracle = []
 benchmarking = ["lazy_static", "regex", "serde", "serde_json"]
 
 [dependencies]
-borsh = "0.9"
+borsh = "0.10.3"
 solana-program = "1.16.16"
 pyth-sdk-solana = "0.4.0"
 bonfida-macros = {version = "0.3.13", path = "../macros"}
