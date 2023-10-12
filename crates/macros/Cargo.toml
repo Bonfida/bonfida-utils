@@ -13,8 +13,8 @@ repository = "https://github.com/Bonfida/bonfida-utils.git"
 proc-macro = true
 
 [dependencies]
-solana-program = "<1.16.0"
+solana-program = "1.16.16"
 syn = "1.0"
 quote = "1.0"
 proc-macro2 = "1.0"
-spl-name-service = "0.2"
+spl-name-service = "0.3.0"
