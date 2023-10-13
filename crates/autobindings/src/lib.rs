@@ -14,7 +14,8 @@ use std::{
 
 use syn::{
     punctuated::Punctuated, token::Comma, Attribute, Expr, ExprLit, Field, Fields, FieldsNamed,
-    Item, ItemEnum, ItemStruct, Lit, Path, Type, TypeArray, TypePath, TypeReference, Variant,
+    Item, ItemEnum, ItemStruct, Lit, LitInt, Path, Type, TypeArray, TypePath, TypeReference,
+    Variant,
 };
 
 use crate::js_generate::js_process_file;
@@ -53,7 +54,7 @@ pub fn command() -> Command<'static> {
             Arg::with_name("instr-enum-path")
                 .long("instructions-enum-path")
                 .takes_value(true)
-                .default_value("src/instruction.rs"),
+                .default_value("src/instruction_auto.rs"),
         )
         .arg(
             Arg::with_name("account-tag-enum-path")
@@ -148,7 +149,6 @@ pub fn generate(
     let (instruction_tags, use_casting) = parse_instructions_enum(instructions_enum_path);
     let directory = std::fs::read_dir(path).unwrap();
     let manifest = Manifest::from_path(cargo_toml_path).unwrap();
-    let state_directory = std::fs::read_dir(std::path::Path::new(state_folder_path)).unwrap();
     let mut output = get_header(target_lang);
     let mut idl = Idl {
         version: manifest.package.as_ref().unwrap().version.clone(),
@@ -200,6 +200,7 @@ pub fn generate(
     }
 
     if matches!(target_lang, TargetLang::AnchorIdl) {
+        let state_directory = std::fs::read_dir(std::path::Path::new(state_folder_path)).unwrap();
         for d in state_directory {
             let file = d.unwrap();
             let account = idl_process_state_file(&file.path(), skip_account_tag);
@@ -213,7 +214,8 @@ pub fn generate(
 }
 
 pub fn parse_instructions_enum(instructions_enum_path: &str) -> (HashMap<String, usize>, bool) {
-    let mut f = File::open(instructions_enum_path).unwrap();
+    let mut f = File::open(instructions_enum_path)
+        .unwrap_or_else(|e| panic!("{e} {}", instructions_enum_path));
     let mut result_map = HashMap::new();
     let mut raw_string = String::new();
     f.read_to_string(&mut raw_string).unwrap();
@@ -221,9 +223,27 @@ pub fn parse_instructions_enum(instructions_enum_path: &str) -> (HashMap<String,
     let ast: syn::File = syn::parse_str(&raw_string).unwrap();
     let instructions_enum = find_enum(&ast, None);
     let enum_variants = get_enum_variants(instructions_enum);
-    for (i, Variant { ident, .. }) in enum_variants.into_iter().enumerate() {
+    let mut instruction_tag = 0;
+    for Variant {
+        ident,
+        discriminant,
+        ..
+    } in enum_variants.into_iter()
+    {
         let module_name = pascal_to_snake(&ident.to_string());
-        result_map.insert(module_name, i);
+        if let Some((_, discriminant)) = discriminant {
+            if let Expr::Lit(ExprLit {
+                lit: Lit::Int(i), ..
+            }) = discriminant
+            {
+                let parsed = i.base10_parse().unwrap();
+                instruction_tag = parsed;
+            } else {
+                panic!("Unsupported enum discriminant type!");
+            }
+        }
+        result_map.insert(module_name, instruction_tag);
+        instruction_tag += 1;
     }
     (result_map, use_casting)
 }
