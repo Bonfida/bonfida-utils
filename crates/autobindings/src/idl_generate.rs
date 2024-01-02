@@ -1,6 +1,6 @@
 use std::{fs::File, io::Read, str::FromStr};
 
-use anchor_syn::idl::{
+use anchor_syn::idl::types::{
     IdlAccount, IdlAccountItem, IdlField, IdlInstruction, IdlType, IdlTypeDefinition,
     IdlTypeDefinitionTy,
 };
@@ -27,12 +27,14 @@ pub fn idl_process_file(module_name: &str, path: &str) -> IdlInstruction {
         accounts: Vec::with_capacity(accounts_fields.len()),
         args: Vec::with_capacity(params_fields.len()),
         returns: None,
+        docs: None,
     };
     for Field { ident, ty, .. } in params_fields {
         let camel_case_ident = snake_to_camel(&ident.as_ref().unwrap().to_string());
         instruction.args.push(IdlField {
             name: camel_case_ident,
             ty: type_to_idl(&ty),
+            docs: None,
         });
     }
     for Field {
@@ -41,7 +43,7 @@ pub fn idl_process_file(module_name: &str, path: &str) -> IdlInstruction {
     {
         let (writable, signer) = get_constraints(&attrs);
         let camel_case_ident = snake_to_camel(&ident.as_ref().unwrap().to_string());
-        if is_slice(&ty) || is_option(&ty) {
+        if is_slice(&ty) {
             unimplemented!();
         } else {
             instruction
@@ -51,6 +53,9 @@ pub fn idl_process_file(module_name: &str, path: &str) -> IdlInstruction {
                     is_mut: writable,
                     is_signer: signer,
                     pda: None,
+                    docs: None,
+                    is_optional: Some(is_option(&ty)),
+                    relations: Vec::with_capacity(0),
                 }));
         }
     }
@@ -78,6 +83,7 @@ pub fn idl_process_state_file(path: &std::path::Path, skip_account_tag: bool) ->
         fields.push(IdlField {
             name: String::from("AccountTag"),
             ty: IdlType::U64,
+            docs: None,
         });
     }
 
@@ -85,12 +91,15 @@ pub fn idl_process_state_file(path: &std::path::Path, skip_account_tag: bool) ->
         fields.push(IdlField {
             name: snake_to_camel(&ident.unwrap().to_string()),
             ty: type_to_idl(&ty),
+            docs: None,
         })
     }
 
     IdlTypeDefinition {
         name,
         ty: IdlTypeDefinitionTy::Struct { fields },
+        docs: None,
+        generics: None,
     }
 }
 

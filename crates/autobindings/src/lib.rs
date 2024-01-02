@@ -1,4 +1,4 @@
-use anchor_syn::idl::Idl;
+use anchor_syn::idl::types::Idl;
 use cargo_toml::Manifest;
 use clap::{crate_name, crate_version, Arg, ArgMatches, Command};
 use convert_case::{Case, Casing};
@@ -87,6 +87,11 @@ pub fn command() -> Command<'static> {
                 .long("skip-account-tag")
                 .takes_value(false),
         )
+        .arg(
+            Arg::with_name("no-state")
+                .long("no-state")
+                .action(clap::ArgAction::SetTrue),
+        )
 }
 
 pub fn process(matches: &ArgMatches) {
@@ -106,6 +111,7 @@ pub fn process(matches: &ArgMatches) {
         }
     };
     let test_mode = bool::from_str(matches.value_of("test").unwrap()).unwrap();
+    let no_state = matches.get_flag("no-state");
     fs::create_dir_all("../js/src/").unwrap();
     fs::create_dir_all("../python/src/").unwrap();
 
@@ -128,6 +134,7 @@ pub fn process(matches: &ArgMatches) {
                     TargetLang::AnchorIdl => "idl.json",
                 },
                 skip_account_tag,
+                no_state,
             );
         }
     }
@@ -136,6 +143,7 @@ pub fn process(matches: &ArgMatches) {
     println!("✨  Done in {:.2?}", elapsed);
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn generate(
     cargo_toml_path: &str,
     instructions_path: &str,
@@ -144,6 +152,7 @@ pub fn generate(
     target_lang: TargetLang,
     output_path: &str,
     skip_account_tag: bool,
+    no_state: bool,
 ) {
     let path = std::path::Path::new(instructions_path);
     let (instruction_tags, use_casting) = parse_instructions_enum(instructions_enum_path);
@@ -155,12 +164,12 @@ pub fn generate(
         name: manifest.package.as_ref().unwrap().name.clone(),
         constants: vec![],
         instructions: vec![],
-        state: None,
         accounts: vec![],
         types: vec![],
         events: None,
         errors: None,
         metadata: None,
+        docs: None,
     };
     for d in directory {
         let file = d.unwrap();
@@ -200,11 +209,14 @@ pub fn generate(
     }
 
     if matches!(target_lang, TargetLang::AnchorIdl) {
-        let state_directory = std::fs::read_dir(std::path::Path::new(state_folder_path)).unwrap();
-        for d in state_directory {
-            let file = d.unwrap();
-            let account = idl_process_state_file(&file.path(), skip_account_tag);
-            idl.accounts.push(account);
+        if !no_state {
+            let state_directory =
+                std::fs::read_dir(std::path::Path::new(state_folder_path)).unwrap();
+            for d in state_directory {
+                let file = d.unwrap();
+                let account = idl_process_state_file(&file.path(), skip_account_tag);
+                idl.accounts.push(account);
+            }
         }
         output.push_str(&serde_json::to_string_pretty(&idl).unwrap())
     }
