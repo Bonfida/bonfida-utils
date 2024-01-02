@@ -535,7 +535,6 @@ dependencies = [
  "serde",
  "serde_json",
  "syn 1.0.109",
- "utf8",
 ]
 
 [[package]]
@@ -5551,12 +5550,6 @@ name = "utf-8"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
-
-[[package]]
-name = "utf8"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6de70c02ee63e85faac75f2ce6c0777ac2b96e16543b51c062302e5df04edc72"
 
 [[package]]
 name = "valuable"
