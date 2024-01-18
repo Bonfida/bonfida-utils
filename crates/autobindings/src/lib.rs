@@ -1,7 +1,7 @@
 use anchor_syn::idl::types::Idl;
 use cargo_toml::Manifest;
 use clap::{crate_name, crate_version, Arg, ArgMatches, Command};
-use convert_case::{Case, Casing};
+use convert_case::{Boundary, Case, Casing};
 use idl_generate::{idl_process_file, idl_process_state_file};
 use proc_macro2::TokenTree;
 use std::{
@@ -331,7 +331,9 @@ fn snake_to_pascal(s: &str) -> String {
     s.from_case(Case::Snake).to_case(Case::Pascal)
 }
 fn pascal_to_snake(s: &str) -> String {
-    s.from_case(Case::Pascal).to_case(Case::Snake)
+    s.from_case(Case::Pascal)
+        .without_boundaries(&[Boundary::UpperDigit])
+        .to_case(Case::Snake)
 }
 fn lower_to_upper(s: &str) -> String {
     s.from_case(Case::Lower).to_case(Case::Upper)
