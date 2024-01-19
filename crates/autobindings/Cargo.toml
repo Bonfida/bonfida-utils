@@ -2,7 +2,7 @@
 name = "bonfida-autobindings"
 description = "Utility to generate JavaScript and python bindings for Solana smart contracts following the Bonfida code conventions"
 license = "MIT"
-version = "0.4.3"
+version = "0.4.4"
 authors = ["ellttBen <elliott@bonfida.com>"]
 edition = "2018"
 repository = "https://github.com/Bonfida/bonfida-utils.git"
