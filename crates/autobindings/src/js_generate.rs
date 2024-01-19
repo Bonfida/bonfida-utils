@@ -185,7 +185,7 @@ fn type_to_js(ty: &Type) -> String {
             match simple_type.as_ref() {
                 "bool" => "boolean".to_owned(),
                 "u8" | "u16" | "u32" | "i8" | "i16" | "i32" => "number".to_owned(),
-                "u64" | "u128" | "i64" | "i128" => "BN".to_owned(),
+                "u64" | "u128" | "i64" | "i128" => "bigint".to_owned(),
                 "String" => "string".to_owned(),
                 "Pubkey" => "Uint8Array".to_owned(),
                 "Vec" => {
@@ -244,7 +244,7 @@ fn array_to_js(inner_type: &str) -> String {
     match inner_type as &str {
         "\"u8\"" | "\"i8\"" => "Uint8Array",
         "\"u16\"" | "\"i16\"" | "\"u32\"" | "\"i32\"" => "number[]",
-        "\"u64\"" | "\"i64\"" | "\"u128\"" | "\"i128\"" => "BN[]",
+        "\"u64\"" | "\"i64\"" | "\"u128\"" | "\"i128\"" => "bigint[]",
         _ => unimplemented!(),
     }
     .to_owned()
