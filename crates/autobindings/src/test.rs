@@ -148,7 +148,6 @@ pub fn test(instructions_path: &str) {
         let mut js_test_file = File::create("../js/tmp_test.ts").unwrap();
         let mut js_test_str = format!(
             "import {{ PublicKey }} from \"@solana/web3.js\";
-            import BN from \"bn.js\";
             import {{ {}Instruction }} from \"./src/raw_instructions\";",
             snake_to_camel(&module_name)
         );
@@ -225,7 +224,7 @@ fn type_to_test_input(ty: &Type, rng: &mut ThreadRng, array: bool) -> Vec<TestIn
                         {
                             input + ","
                         } else {
-                            "new BN(".to_owned() + &input + "),"
+                            "BigInt(".to_owned() + &input + "),"
                         },
                     }]
                 }
