@@ -7,8 +7,6 @@ use pyth_sdk_solana::{
 };
 use solana_program::{msg, program_error::ProgramError, pubkey::Pubkey};
 use std::convert::TryInto;
-#[cfg(feature = "mock-oracle")]
-use std::convert::TryInto;
 
 pub fn check_price_acc_key(
     mapping_acc_data: &[u8],
@@ -86,6 +84,44 @@ pub fn get_oracle_price_fp32(
     Ok(final_price)
 }
 
+pub fn get_oracle_ema_price_fp32(
+    account_data: &[u8],
+    base_decimals: u8,
+    quote_decimals: u8,
+) -> Result<u64, ProgramError> {
+    #[cfg(feature = "mock-oracle")]
+    {
+        // Mock testing oracle
+        if account_data.len() == 8 {
+            return Ok(u64::from_le_bytes(account_data[0..8].try_into().unwrap()));
+        }
+    };
+
+    // Pyth Oracle
+    let price_account = load_price_account(account_data)?;
+    let Price { price, expo, .. } = price_account
+        .to_price_feed(&Pubkey::default())
+        .get_ema_price()
+        .ok_or_else(|| {
+            msg!("Cannot parse pyth ema price, information unavailable.");
+            ProgramError::InvalidAccountData
+        })?;
+    let price = if expo > 0 {
+        ((price as u128) << 32) * 10u128.pow(expo as u32)
+    } else {
+        ((price as u128) << 32) / 10u128.pow((-expo) as u32)
+    };
+
+    let corrected_price =
+        (price * 10u128.pow(quote_decimals as u32)) / 10u128.pow(base_decimals as u32);
+
+    let final_price = corrected_price.try_into().unwrap();
+
+    msg!("Pyth FP32 price value: {:?}", final_price);
+
+    Ok(final_price)
+}
+
 pub fn get_market_symbol(pyth_product_acc_data: &[u8]) -> Result<&str, ProgramError> {
     let pyth_product = load_product_account(pyth_product_acc_data).unwrap();
     for (k, v) in pyth_product.iter() {
@@ -112,6 +148,8 @@ pub fn test_sol() {
     let price_data = rpc_client.get_account_data(&pyth_sol_price_acc).unwrap();
     let price = get_oracle_price_fp32(&price_data, 6, 6).unwrap();
     println!("Found: '{}' FP32 Price: {}", symbol, price);
+    let ema_price = get_oracle_ema_price_fp32(&price_data, 6, 6).unwrap();
+    println!("Found: '{}' FP32 EMA Price: {}", symbol, ema_price);
 }
 
 #[test]
