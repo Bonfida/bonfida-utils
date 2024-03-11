@@ -140,11 +140,11 @@ pub fn get_oracle_price_or_ema_fp32(
     let price_feed = price_account.to_price_feed(&Pubkey::default());
     let Price { price, expo, .. } = price_feed
         .get_current_price()
-        .or(price_feed.get_ema_price())
-        .ok_or_else(|| {
-            msg!("Cannot parse pyth ema price, information unavailable.");
-            ProgramError::InvalidAccountData
-        })?;
+        .or_else(|| {
+            msg!("Cannot parse pyth price, information unavailable. Fallback on EMA");
+            price_feed.get_ema_price()
+        })
+        .unwrap();
     let price = if expo > 0 {
         ((price as u128) << 32) * 10u128.pow(expo as u32)
     } else {
