@@ -8,6 +8,7 @@ mod borsh_size;
 pub mod checks;
 mod compute_record_hash;
 mod declare_id_with_central_state;
+pub mod tokens;
 mod wrapped_pod;
 
 pub mod fp_math;
