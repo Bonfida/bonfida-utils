@@ -187,6 +187,22 @@ pub fn get_feed_id_from_mint(mint: &Pubkey) -> Result<[u8; 32], ProgramError> {
     }
 }
 
+pub fn get_token_decimals_from_mint(mint: &Pubkey) -> Result<u8, ProgramError> {
+    match *mint {
+        tokens::bat::MINT => Ok(tokens::bat::DECIMALS),
+        tokens::bonk::MINT => Ok(tokens::bonk::DECIMALS),
+        tokens::bsol::MINT => Ok(tokens::bsol::DECIMALS),
+        tokens::fida::MINT => Ok(tokens::fida::DECIMALS),
+        tokens::inj::MINT => Ok(tokens::inj::DECIMALS),
+        tokens::msol::MINT => Ok(tokens::msol::DECIMALS),
+        tokens::pyth::MINT => Ok(tokens::pyth::DECIMALS),
+        tokens::sol::MINT => Ok(tokens::sol::DECIMALS),
+        tokens::usdc::MINT => Ok(tokens::usdc::DECIMALS),
+        tokens::usdt::MINT => Ok(tokens::usdt::DECIMALS),
+        _ => Err(ProgramError::InvalidArgument),
+    }
+}
+
 pub fn parse_price_v2(data: &[u8]) -> Result<PriceUpdateV2, ProgramError> {
     let tag = &data[..8];
 
