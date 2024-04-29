@@ -61,7 +61,7 @@ pub fn get_output_file(test_name: &str, commit_id: &str) -> Option<File> {
         let d = DirBuilder::new();
         d.create(&output_dir).unwrap();
     }
-    let file_path = output_dir.join(&format!("{}_{}.json", test_name, commit_id));
+    let file_path = output_dir.join(format!("{}_{}.json", test_name, commit_id));
     if file_path.exists() {
         return None;
     }
@@ -134,7 +134,7 @@ pub fn get_env_arg<T: FromStr>(idx: usize) -> Option<T>
 where
     <T as FromStr>::Err: std::fmt::Debug,
 {
-    std::env::var(&format!("ARGUMENT_{}", idx))
+    std::env::var(format!("ARGUMENT_{}", idx))
         .map(|s| s.parse::<T>().unwrap())
         .ok()
 }

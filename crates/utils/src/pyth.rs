@@ -1,4 +1,4 @@
-use crate::{checks::check_account_owner, tokens};
+use crate::{checks::check_account_owner, tokens::SupportedToken};
 use borsh::BorshDeserialize;
 use pyth_sdk_solana::{
     state::{
@@ -7,11 +7,10 @@ use pyth_sdk_solana::{
     },
     Price,
 };
-use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, PriceUpdateV2};
+use pyth_solana_receiver_sdk::price_update::PriceUpdateV2;
 use solana_program::pubkey;
 use solana_program::{
     account_info::AccountInfo, clock::Clock, msg, program_error::ProgramError, pubkey::Pubkey,
-    sysvar::Sysvar,
 };
 use std::convert::TryInto;
 
@@ -29,7 +28,7 @@ pub fn check_price_acc_key(
 
     // Get and print each Product in Mapping directory
     for prod_akey in &map_acct.products {
-        let prod_key = Pubkey::new(&prod_akey.val);
+        let prod_key = Pubkey::from(prod_akey.val);
 
         if *product_acc_key != prod_key {
             continue;
@@ -44,7 +43,7 @@ pub fn check_price_acc_key(
         }
 
         // Check only the first price account
-        let px_key = Pubkey::new(&prod_acc.px_acc.val);
+        let px_key = Pubkey::from(prod_acc.px_acc.val);
 
         if *price_acc_key == px_key {
             msg!("Found correct price account in product.");
@@ -171,38 +170,6 @@ pub fn get_oracle_price_or_ema_fp32(
     Ok(final_price)
 }
 
-pub fn get_feed_id_from_mint(mint: &Pubkey) -> Result<[u8; 32], ProgramError> {
-    match *mint {
-        tokens::bat::MINT => Ok(tokens::bat::PRICE_FEED),
-        tokens::bonk::MINT => Ok(tokens::bonk::PRICE_FEED),
-        tokens::bsol::MINT => Ok(tokens::bsol::PRICE_FEED),
-        tokens::fida::MINT => Ok(tokens::fida::PRICE_FEED),
-        tokens::inj::MINT => Ok(tokens::inj::PRICE_FEED),
-        tokens::msol::MINT => Ok(tokens::msol::PRICE_FEED),
-        tokens::pyth::MINT => Ok(tokens::pyth::PRICE_FEED),
-        tokens::sol::MINT => Ok(tokens::sol::PRICE_FEED),
-        tokens::usdc::MINT => Ok(tokens::usdc::PRICE_FEED),
-        tokens::usdt::MINT => Ok(tokens::usdt::PRICE_FEED),
-        _ => Err(ProgramError::InvalidArgument),
-    }
-}
-
-pub fn get_token_decimals_from_mint(mint: &Pubkey) -> Result<u8, ProgramError> {
-    match *mint {
-        tokens::bat::MINT => Ok(tokens::bat::DECIMALS),
-        tokens::bonk::MINT => Ok(tokens::bonk::DECIMALS),
-        tokens::bsol::MINT => Ok(tokens::bsol::DECIMALS),
-        tokens::fida::MINT => Ok(tokens::fida::DECIMALS),
-        tokens::inj::MINT => Ok(tokens::inj::DECIMALS),
-        tokens::msol::MINT => Ok(tokens::msol::DECIMALS),
-        tokens::pyth::MINT => Ok(tokens::pyth::DECIMALS),
-        tokens::sol::MINT => Ok(tokens::sol::DECIMALS),
-        tokens::usdc::MINT => Ok(tokens::usdc::DECIMALS),
-        tokens::usdt::MINT => Ok(tokens::usdt::DECIMALS),
-        _ => Err(ProgramError::InvalidArgument),
-    }
-}
-
 pub fn parse_price_v2(data: &[u8]) -> Result<PriceUpdateV2, ProgramError> {
     let tag = &data[..8];
 
@@ -230,7 +197,7 @@ pub fn get_oracle_price_fp32_v2(
 
     let update = parse_price_v2(data).unwrap();
 
-    let feed_id = get_feed_id_from_mint(token_mint).unwrap();
+    let feed_id = SupportedToken::from_mint(token_mint).unwrap().price_feed();
 
     let pyth_solana_receiver_sdk::price_update::Price {
         price, exponent, ..
@@ -339,7 +306,7 @@ mod test {
             // Get and print each Product in Mapping directory
             let mut i = 0;
             for prod_akey in &map_acct.products {
-                let prod_pkey = Pubkey::new(&prod_akey.val);
+                let prod_pkey = Pubkey::from(prod_akey.val);
                 let prod_data = rpc_client.get_account_data(&prod_pkey).unwrap();
                 let prod_acc = load_product_account(&prod_data).unwrap();
 
@@ -353,7 +320,7 @@ mod test {
 
                 // print all Prices that correspond to this Product
                 if prod_acc.px_acc.is_valid() {
-                    let mut px_pkey = Pubkey::new(&prod_acc.px_acc.val);
+                    let mut px_pkey = Pubkey::from(prod_acc.px_acc.val);
                     loop {
                         let pd = rpc_client.get_account_data(&px_pkey).unwrap();
                         let pa = load_price_account(&pd).unwrap();
@@ -369,7 +336,7 @@ mod test {
 
                         // go to next price account in list
                         if pa.next.is_valid() {
-                            px_pkey = Pubkey::new(&pa.next.val);
+                            px_pkey = Pubkey::from(pa.next.val);
                         } else {
                             break;
                         }
@@ -386,13 +353,13 @@ mod test {
             if !map_acct.next.is_valid() {
                 break;
             }
-            pyth_mapping_account = Pubkey::new(&map_acct.next.val);
+            pyth_mapping_account = Pubkey::from(map_acct.next.val);
         }
     }
 
     #[test]
     fn test_price_v2() {
-        let feed = get_feed_id_from_mint(&tokens::sol::MINT).unwrap();
+        let feed = SupportedToken::Sol.price_feed();
         let key = get_pyth_feed_account_key(0, &feed);
 
         let mut account_data = [
@@ -419,9 +386,15 @@ mod test {
         let clock: Clock = Clock {
             ..Default::default()
         };
-        let price_fp32 =
-            get_oracle_price_fp32_v2(&tokens::sol::MINT, &account_info, 9, 6, &clock, 2 * 60)
-                .unwrap();
+        let price_fp32 = get_oracle_price_fp32_v2(
+            &SupportedToken::Sol.mint(),
+            &account_info,
+            9,
+            6,
+            &clock,
+            2 * 60,
+        )
+        .unwrap();
 
         assert_eq!(565179032, price_fp32);
     }
