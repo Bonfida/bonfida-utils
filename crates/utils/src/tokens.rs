@@ -119,3 +119,73 @@ impl SupportedToken {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::tokens::SupportedToken;
+
+    #[test]
+    fn test_feed_id() {
+        // https://pyth.network/developers/price-feed-ids
+        assert_eq!(
+            SupportedToken::USDC.price_feed(),
+            hex::decode("eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            SupportedToken::USDT.price_feed(),
+            hex::decode("2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            SupportedToken::Sol.price_feed(),
+            hex::decode("ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            SupportedToken::Fida.price_feed(),
+            hex::decode("c80657b7f6f3eac27218d09d5a4e54e47b25768d9f5e10ac15fe2cf900881400")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            SupportedToken::MSol.price_feed(),
+            hex::decode("c2289a6a43d2ce91c6f55caec370f4acc38a2ed477f58813334c6d03749ff2a4")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            SupportedToken::Bonk.price_feed(),
+            hex::decode("72b021217ca3fe68922a19aaf990109cb9d84e9ad004b4d2025ad6f529314419")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            SupportedToken::BAT.price_feed(),
+            hex::decode("8e860fb74e60e5736b455d82f60b3728049c348e94961add5f961b02fdee2535")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            SupportedToken::Pyth.price_feed(),
+            hex::decode("0bbf28e9a841a1cc788f6a361b17ca072d0ea3098a1e5df1c3922d06719579ff")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            SupportedToken::BSol.price_feed(),
+            hex::decode("89875379e70f8fbadc17aef315adf3a8d5d160b811435537e03c97e8aac97d9c")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            SupportedToken::Inj.price_feed(),
+            hex::decode("7a5bc1d2b56ad029048cd63964b3ad2776eadf812edc1a43a31406cb54bff592")
+                .unwrap()
+                .as_slice()
+        );
+    }
+}

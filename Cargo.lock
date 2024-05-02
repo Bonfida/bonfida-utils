@@ -791,6 +791,7 @@ dependencies = [
  "bonfida-macros",
  "borsh 0.10.3",
  "bytemuck",
+ "hex",
  "lazy_static",
  "pyth-sdk-solana",
  "pyth-solana-receiver-sdk",
