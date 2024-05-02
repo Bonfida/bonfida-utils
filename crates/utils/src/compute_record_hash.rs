@@ -8,7 +8,7 @@ mod tests {
     #[test]
     pub fn functional() {
         let record_hash = compute_hashv!("ETH");
-        let record_hash_ref = hashv(&["SPL Name Service\0ETH".as_bytes()]).to_bytes();
+        let record_hash_ref = hashv(&["SPL Name Service\x01ETH".as_bytes()]).to_bytes();
         assert_eq!(record_hash, record_hash_ref);
     }
 }
