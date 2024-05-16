@@ -786,7 +786,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-utils"
-version = "0.5.0"
+version = "0.6.1"
 dependencies = [
  "bonfida-macros",
  "borsh 0.10.3",

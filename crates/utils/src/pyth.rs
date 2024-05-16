@@ -221,6 +221,43 @@ pub fn get_oracle_price_fp32_v2(
     Ok(final_price)
 }
 
+// Used for Pyth v2 to allow any feed id without validation, the token/asset validation must be done by the caller program
+pub fn get_oracle_price_from_feed_id_fp32(
+    feed_id: &[u8; 32],
+    account: &AccountInfo,
+    base_decimals: u8,
+    quote_decimals: u8,
+    clock: &Clock,
+    maximum_age: u64,
+) -> Result<u64, ProgramError> {
+    check_account_owner(account, &pyth_solana_receiver_sdk::ID)?;
+
+    let data = &account.data.borrow() as &[u8];
+
+    let update = parse_price_v2(data).unwrap();
+
+    let pyth_solana_receiver_sdk::price_update::Price {
+        price, exponent, ..
+    } = update
+        .get_price_no_older_than(clock, maximum_age, feed_id)
+        .unwrap();
+
+    let price = if exponent > 0 {
+        ((price as u128) << 32) * 10u128.pow(exponent as u32)
+    } else {
+        ((price as u128) << 32) / 10u128.pow((-exponent) as u32)
+    };
+
+    let corrected_price =
+        (price * 10u128.pow(quote_decimals as u32)) / 10u128.pow(base_decimals as u32);
+
+    let final_price = corrected_price.try_into().unwrap();
+
+    msg!("Pyth FP32 price value: {:?}", final_price);
+
+    Ok(final_price)
+}
+
 pub fn get_pyth_feed_account_key(shard: u16, price_feed: &[u8]) -> Pubkey {
     let seeds = &[&shard.to_le_bytes() as &[u8], &price_feed];
     let (key, _) = Pubkey::find_program_address(seeds, &DEFAULT_PYTH_PUSH);
@@ -396,6 +433,17 @@ mod test {
         )
         .unwrap();
 
+        assert_eq!(565179032, price_fp32);
+
+        let price_fp32 = get_oracle_price_from_feed_id_fp32(
+            &SupportedToken::Sol.price_feed(),
+            &account_info,
+            9,
+            6,
+            &clock,
+            2 * 60,
+        )
+        .unwrap();
         assert_eq!(565179032, price_fp32);
     }
 }
