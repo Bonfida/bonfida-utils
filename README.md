@@ -69,7 +69,7 @@ Install the main bonfida cli
 ```
 git clone https://github.com/Bonfida/bonfida-utils.git
 cd bonfida-utils
-cargo install --path cli
+cargo install --path crates/cli
 ```
 
 To automatically generate Javascript or Python bindings
