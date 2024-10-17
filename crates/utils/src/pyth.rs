@@ -259,7 +259,7 @@ pub fn get_oracle_price_from_feed_id_fp32(
 }
 
 pub fn get_pyth_feed_account_key(shard: u16, price_feed: &[u8]) -> Pubkey {
-    let seeds = &[&shard.to_le_bytes() as &[u8], &price_feed];
+    let seeds = &[&shard.to_le_bytes() as &[u8], price_feed];
     let (key, _) = Pubkey::find_program_address(seeds, &DEFAULT_PYTH_PUSH);
     key
 }

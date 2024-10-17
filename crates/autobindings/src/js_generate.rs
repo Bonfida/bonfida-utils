@@ -6,7 +6,7 @@ use syn::{
 };
 
 use crate::{
-    find_struct, get_constraints, get_struct_fields, is_option, is_slice, is_vec, padding_len,
+    find_struct, get_constraints, get_struct_fields, is_option, is_slice, padding_len,
     snake_to_camel,
 };
 
@@ -111,7 +111,7 @@ pub fn js_process_file(
     statements.extend(declaration_statements.clone());
     statements.push("static schema = {".to_owned());
     statements.push("struct : {".to_owned());
-    statements.extend(schema_statements.into_iter());
+    statements.extend(schema_statements);
     statements.push("},".to_owned());
     statements.push("};".to_owned());
     if declaration_statements.is_empty() {
@@ -198,13 +198,13 @@ fn type_to_js(ty: &Type) -> String {
                     {
                         if let GenericArgument::Type(t) = args.first().unwrap() {
                             let inner_type = type_to_js(t);
-                            return format!("{}[]", &inner_type);
+                            format!("{}[]", &inner_type)
                         } else {
                             unimplemented!()
                         }
                     } else {
                         unreachable!()
-                    };
+                    }
                 }
                 "Option" => {
                     if let PathArguments::AngleBracketed(AngleBracketedGenericArguments {
@@ -216,13 +216,13 @@ fn type_to_js(ty: &Type) -> String {
                     {
                         if let GenericArgument::Type(t) = args.first().unwrap() {
                             let inner_type = type_to_js(t);
-                            return format!("{} | null", &inner_type);
+                            format!("{} | null", &inner_type)
                         } else {
                             unimplemented!()
                         }
                     } else {
                         unreachable!()
-                    };
+                    }
                 }
                 _ => "number".to_owned(), // We assume this is an enum
             }

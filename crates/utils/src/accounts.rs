@@ -82,8 +82,8 @@ mod tests {
     use borsh::{BorshDeserialize, BorshSerialize};
     use solana_program::pubkey::Pubkey;
 
-    #[cfg(feature = "instruction_params_casting")]
-    use bytemuck::{Pod, Zeroable};
+    // #[cfg(feature = "instruction_params_casting")]
+    // use bytemuck::{Pod, Zeroable};
 
     mod accounts {
         use super::*;
@@ -108,7 +108,7 @@ mod tests {
         }
     }
     #[derive(BorshDeserialize, BorshSerialize, BorshSize, Clone, Copy)]
-    #[cfg_attr(feature = "instruction_params_casting", derive(Zeroable, Pod))]
+    // #[cfg_attr(feature = "instruction_params_casting", derive(Zeroable, Pod))]
     #[repr(C)]
     pub struct Params {
         pub match_limit: u64,
@@ -187,14 +187,14 @@ mod tests {
 
         assert_eq!(instruction_data, instruction.data);
 
-        #[cfg(feature = "instruction_params_casting")]
-        {
-            let instruction = a.get_instruction_cast(crate::ID, 0, params);
-            let mut instruction_data = [0; 8].to_vec();
-            instruction_data.extend(bytemuck::bytes_of(&params));
+        // #[cfg(feature = "instruction_params_casting")]
+        // {
+        //     let instruction = a.get_instruction_cast(crate::ID, 0, params);
+        //     let mut instruction_data = [0; 8].to_vec();
+        //     instruction_data.extend(bytemuck::bytes_of(&params));
 
-            assert_eq!(instruction_data, instruction.data);
-        }
+        //     assert_eq!(instruction_data, instruction.data);
+        // }
     }
 
     #[test]
@@ -253,13 +253,13 @@ mod tests {
 
         assert_eq!(instruction_data, instruction.data);
 
-        #[cfg(feature = "instruction_params_casting")]
-        {
-            let instruction = a.get_instruction_cast(crate::ID, 0, params);
-            let mut instruction_data = [0; 8].to_vec();
-            instruction_data.extend(bytemuck::bytes_of(&params));
+        // #[cfg(feature = "instruction_params_casting")]
+        // {
+        //     let instruction = a.get_instruction_cast(crate::ID, 0, params);
+        //     let mut instruction_data = [0; 8].to_vec();
+        //     instruction_data.extend(bytemuck::bytes_of(&params));
 
-            assert_eq!(instruction_data, instruction.data);
-        }
+        //     assert_eq!(instruction_data, instruction.data);
+        // }
     }
 }

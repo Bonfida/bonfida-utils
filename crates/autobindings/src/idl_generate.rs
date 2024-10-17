@@ -5,8 +5,8 @@ use anchor_syn::idl::types::{
     IdlTypeDefinitionTy,
 };
 use syn::{
-    spanned::Spanned, AngleBracketedGenericArguments, Expr, ExprLit, Field, GenericArgument, Item,
-    Lit, Path, PathArguments, Type, TypeArray, TypePath,
+    AngleBracketedGenericArguments, Expr, ExprLit, Field, GenericArgument, Item, Lit, Path,
+    PathArguments, Type, TypeArray, TypePath,
 };
 
 use crate::{find_struct, get_constraints, get_struct_fields, is_option, is_slice, snake_to_camel};

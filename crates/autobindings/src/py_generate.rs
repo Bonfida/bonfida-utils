@@ -104,7 +104,7 @@ pub fn py_process_file(
         .map(|s| s.to_owned())
         .collect::<Vec<String>>();
 
-    statements.extend(schema_statements.into_iter());
+    statements.extend(schema_statements);
     statements.push("\t)".to_owned());
 
     statements.push("\tdef serialize(self,".to_owned());
@@ -167,13 +167,13 @@ pub(crate) fn type_to_py(ty: &Type) -> String {
                     {
                         if let GenericArgument::Type(t) = args.first().unwrap() {
                             let inner_type = type_to_py(t);
-                            return format!("List[{}]", &inner_type);
+                            format!("List[{}]", &inner_type)
                         } else {
                             unimplemented!()
                         }
                     } else {
                         unreachable!()
-                    };
+                    }
                 }
                 _ => "int".to_owned(), // We assume this is an enum
             }
@@ -218,13 +218,13 @@ fn type_to_borsh_py(ty: &Type) -> String {
                     {
                         if let GenericArgument::Type(t) = args.first().unwrap() {
                             let inner_type = type_to_borsh_py(t);
-                            return format!("borsh.Vec({})", &inner_type);
+                            format!("borsh.Vec({})", &inner_type)
                         } else {
                             unimplemented!()
                         }
                     } else {
                         unreachable!()
-                    };
+                    }
                 }
                 _ => "borsh.U8".to_owned(), // We assume this is an enum
             }
