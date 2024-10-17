@@ -29,3 +29,4 @@ pyth-solana-receiver-sdk = "0.3.0"
 [dev-dependencies]
 solana-client = "1.9"
 hex = "0.4.3"
+rand = "0.8.5"

@@ -808,6 +808,7 @@ dependencies = [
  "lazy_static",
  "pyth-sdk-solana",
  "pyth-solana-receiver-sdk",
+ "rand 0.8.5",
  "regex",
  "serde",
  "serde_json",
