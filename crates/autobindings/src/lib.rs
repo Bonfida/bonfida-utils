@@ -157,10 +157,13 @@ pub fn generate(
     let path = std::path::Path::new(instructions_path);
     let (instruction_tags, use_casting) = parse_instructions_enum(instructions_enum_path);
     let directory = std::fs::read_dir(path).unwrap();
+    let cargo_toml_path = std::path::Path::new(&cargo_toml_path)
+        .canonicalize()
+        .unwrap();
     let manifest = Manifest::from_path(cargo_toml_path).unwrap();
     let mut output = get_header(target_lang);
     let mut idl = Idl {
-        version: manifest.package.as_ref().unwrap().version.clone(),
+        version: manifest.package.as_ref().unwrap().version.clone().unwrap(),
         name: manifest.package.as_ref().unwrap().name.clone(),
         constants: vec![],
         instructions: vec![],
@@ -179,9 +182,12 @@ pub fn generate(
             .to_str()
             .unwrap()
             .to_owned();
-        let instruction_tag = instruction_tags
-            .get(&module_name)
-            .unwrap_or_else(|| panic!("Instruction not found for {}", module_name));
+        let instruction_tag = instruction_tags.get(&module_name).unwrap_or_else(|| {
+            panic!(
+                "Instruction not found for {} in {:#?}",
+                module_name, instruction_tags
+            )
+        });
         match target_lang {
             TargetLang::Javascript => {
                 let s = js_process_file(
@@ -203,7 +209,9 @@ pub fn generate(
             }
             TargetLang::AnchorIdl => {
                 let i = idl_process_file(&module_name, file.path().to_str().unwrap());
-                idl.instructions.push(i)
+                if let Some(i) = i {
+                    idl.instructions.push(i)
+                }
             }
         };
     }
@@ -332,7 +340,7 @@ fn snake_to_pascal(s: &str) -> String {
 }
 fn pascal_to_snake(s: &str) -> String {
     s.from_case(Case::Pascal)
-        .without_boundaries(&[Boundary::UpperDigit])
+        .without_boundaries(&[Boundary::UpperDigit, Boundary::DigitLower])
         .to_case(Case::Snake)
 }
 fn lower_to_upper(s: &str) -> String {

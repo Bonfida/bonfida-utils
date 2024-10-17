@@ -5,13 +5,13 @@ use anchor_syn::idl::types::{
     IdlTypeDefinitionTy,
 };
 use syn::{
-    AngleBracketedGenericArguments, Expr, ExprLit, Field, GenericArgument, Item, Lit, Path,
-    PathArguments, Type, TypeArray, TypePath,
+    spanned::Spanned, AngleBracketedGenericArguments, Expr, ExprLit, Field, GenericArgument, Item,
+    Lit, Path, PathArguments, Type, TypeArray, TypePath,
 };
 
 use crate::{find_struct, get_constraints, get_struct_fields, is_option, is_slice, snake_to_camel};
 
-pub fn idl_process_file(module_name: &str, path: &str) -> IdlInstruction {
+pub fn idl_process_file(module_name: &str, path: &str) -> Option<IdlInstruction> {
     let mut f = File::open(path).unwrap();
     let mut raw_string = String::new();
     f.read_to_string(&mut raw_string).unwrap();
@@ -44,7 +44,11 @@ pub fn idl_process_file(module_name: &str, path: &str) -> IdlInstruction {
         let (writable, signer) = get_constraints(&attrs);
         let camel_case_ident = snake_to_camel(&ident.as_ref().unwrap().to_string());
         if is_slice(&ty) {
-            unimplemented!();
+            eprintln!(
+                "Instruction {} is incompatible with the IDL spec, skipping",
+                module_name
+            );
+            return None;
         } else {
             instruction
                 .accounts
@@ -59,7 +63,7 @@ pub fn idl_process_file(module_name: &str, path: &str) -> IdlInstruction {
                 }));
         }
     }
-    instruction
+    Some(instruction)
 }
 
 pub fn idl_process_state_file(path: &std::path::Path, skip_account_tag: bool) -> IdlTypeDefinition {
