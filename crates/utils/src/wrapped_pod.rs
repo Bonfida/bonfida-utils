@@ -53,6 +53,10 @@ pub mod tests {
         let mut buf = Vec::with_capacity(o.size());
         o.export(&mut buf);
         assert_eq!(buf.len(), o.size());
+        assert_eq!(
+            buf.len(),
+            size_of::<u64>() + 8 + size_of_val(o.b) + size_of_val(o.c)
+        );
         let o2 = TestStructMut::from_bytes(&mut buf);
         assert_eq!(o2, o)
     }
@@ -66,6 +70,10 @@ pub mod tests {
         let mut buf = Vec::with_capacity(o.size());
         o.export(&mut buf);
         assert_eq!(buf.len(), o.size());
+        assert_eq!(
+            buf.len(),
+            size_of::<u64>() + 8 + size_of_val(o.b) + size_of_val(o.c)
+        );
         let o2 = TestStruct::from_bytes(&buf);
         assert_eq!(o2, o)
     }
@@ -79,6 +87,8 @@ pub mod tests {
         let mut buf = Vec::with_capacity(o.size());
         o.export(&mut buf);
         assert_eq!(buf.len(), o.size());
+
+        assert_eq!(buf.len(), size_of::<u64>() + 8 + o.b.len() + o.c.len());
         let o2 = TestStructMut2::from_bytes(&mut buf);
         assert_eq!(o2, o)
     }
@@ -92,6 +102,7 @@ pub mod tests {
         let mut buf = Vec::with_capacity(o.size());
         o.export(&mut buf);
         assert_eq!(buf.len(), o.size());
+        assert_eq!(buf.len(), size_of::<u64>() + 8 + o.b.len() + o.c.len());
         let o2 = TestStruct2::from_bytes(&buf);
         assert_eq!(o2, o)
     }
