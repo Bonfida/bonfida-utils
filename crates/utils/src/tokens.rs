@@ -61,12 +61,9 @@ impl SupportedToken {
 
     pub const fn decimals(self) -> u8 {
         match self {
-            SupportedToken::Sol
-            | SupportedToken::MSol
-            | SupportedToken::Inj
-            | SupportedToken::BSol => 9,
+            SupportedToken::Sol | SupportedToken::MSol | SupportedToken::BSol => 9,
             SupportedToken::Bonk => 5,
-            SupportedToken::BAT => 8,
+            SupportedToken::BAT | SupportedToken::Inj => 8,
             SupportedToken::USDC
             | SupportedToken::USDT
             | SupportedToken::Fida
