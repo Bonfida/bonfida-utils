@@ -71,6 +71,21 @@ impl SupportedToken {
         }
     }
 
+    pub const fn price_feed_account_key(self) -> Pubkey {
+        match self {
+            SupportedToken::USDC => pubkey!("Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX"),
+            SupportedToken::USDT => pubkey!("HT2PLQBcG5EiCcNSaMHAjSgd9F98ecpATbk4Sk5oYuM"),
+            SupportedToken::Sol => pubkey!("7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE"),
+            SupportedToken::Fida => pubkey!("2cfmeuVBf7bvBJcjKBQgAwfvpUvdZV7K8NZxUEuccrub"),
+            SupportedToken::MSol => pubkey!("5CKzb9j4ChgLUt8Gfm5CNGLN6khXKiqMbnGAW4cgXgxK"),
+            SupportedToken::Bonk => pubkey!("DBE3N8uNjhKPRHfANdwGvCZghWXyLPdqdSbEW2XFwBiX"),
+            SupportedToken::BAT => pubkey!("EHH5mjVUsBUF7jD9nFcvB5TnG1fi6U54hRRphAxsVAWQ"),
+            SupportedToken::Pyth => pubkey!("8vjchtMuJNY4oFQdTi8yCe6mhCaNBFaUbktT482TpLPS"),
+            SupportedToken::BSol => pubkey!("5cN76Xm2Dtx9MnrQqBDeZZRsWruTTcw37UruznAdSvvE"),
+            SupportedToken::Inj => pubkey!("GwXYEfmPdgHcowF9GZwbb1WiTGTn1fuT3hbSLneoBKK6"),
+        }
+    }
+
     pub const fn price_feed(self) -> [u8; 32] {
         match self {
             SupportedToken::USDC => [
@@ -119,7 +134,52 @@ impl SupportedToken {
 
 #[cfg(test)]
 mod test {
+    use crate::pyth::get_pyth_feed_account_key;
     use crate::tokens::SupportedToken;
+
+    #[test]
+    fn test_price_feed_account_key() {
+        assert_eq!(
+            SupportedToken::USDC.price_feed_account_key(),
+            get_pyth_feed_account_key(0, &SupportedToken::USDC.price_feed())
+        );
+        assert_eq!(
+            SupportedToken::USDT.price_feed_account_key(),
+            get_pyth_feed_account_key(0, &SupportedToken::USDT.price_feed())
+        );
+        assert_eq!(
+            SupportedToken::Sol.price_feed_account_key(),
+            get_pyth_feed_account_key(0, &SupportedToken::Sol.price_feed())
+        );
+        assert_eq!(
+            SupportedToken::Fida.price_feed_account_key(),
+            get_pyth_feed_account_key(0, &SupportedToken::Fida.price_feed())
+        );
+        assert_eq!(
+            SupportedToken::MSol.price_feed_account_key(),
+            get_pyth_feed_account_key(0, &SupportedToken::MSol.price_feed())
+        );
+        assert_eq!(
+            SupportedToken::Bonk.price_feed_account_key(),
+            get_pyth_feed_account_key(0, &SupportedToken::Bonk.price_feed())
+        );
+        assert_eq!(
+            SupportedToken::BAT.price_feed_account_key(),
+            get_pyth_feed_account_key(0, &SupportedToken::BAT.price_feed())
+        );
+        assert_eq!(
+            SupportedToken::Pyth.price_feed_account_key(),
+            get_pyth_feed_account_key(0, &SupportedToken::Pyth.price_feed())
+        );
+        assert_eq!(
+            SupportedToken::BSol.price_feed_account_key(),
+            get_pyth_feed_account_key(0, &SupportedToken::BSol.price_feed())
+        );
+        assert_eq!(
+            SupportedToken::Inj.price_feed_account_key(),
+            get_pyth_feed_account_key(0, &SupportedToken::Inj.price_feed())
+        );
+    }
 
     #[test]
     fn test_feed_id() {
