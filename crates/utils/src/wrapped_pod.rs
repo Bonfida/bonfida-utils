@@ -1,9 +1,9 @@
-pub trait WrappedPod<'a> {
+pub trait WrappedPod<'a>: Sized {
     fn export(&self, buffer: &mut Vec<u8>);
     fn size(&self) -> usize;
     fn from_bytes(buffer: &'a [u8]) -> Self;
     #[allow(unused_variables)]
-    fn try_from_bytes(buffer: &'a [u8]) -> Result<Box<Self>, std::io::Error> {
+    fn try_from_bytes(buffer: &'a [u8]) -> Result<Self, std::io::Error> {
         // Default implementation for backward comp
         Err(std::io::Error::new(
             std::io::ErrorKind::Unsupported,
@@ -12,12 +12,12 @@ pub trait WrappedPod<'a> {
     }
 }
 
-pub trait WrappedPodMut<'a> {
+pub trait WrappedPodMut<'a>: Sized {
     fn export(&self, buffer: &mut Vec<u8>);
     fn size(&self) -> usize;
     fn from_bytes(buffer: &'a mut [u8]) -> Self;
     #[allow(unused_variables)]
-    fn try_from_bytes(buffer: &'a mut [u8]) -> Result<Box<Self>, std::io::Error> {
+    fn try_from_bytes(buffer: &'a mut [u8]) -> Result<Self, std::io::Error> {
         // Default implementation for backward comp
         Err(std::io::Error::new(
             std::io::ErrorKind::Unsupported,
@@ -126,7 +126,7 @@ pub mod tests {
         assert_eq!(o2, o);
 
         let o2_try = TestStructMut::try_from_bytes(&mut buf).unwrap();
-        assert_eq!(*o2_try, o);
+        assert_eq!(o2_try, o);
     }
 
     #[test]
@@ -146,7 +146,7 @@ pub mod tests {
         assert_eq!(o2, o);
 
         let o2_try = TestStruct::try_from_bytes(&buf).unwrap();
-        assert_eq!(*o2_try, o);
+        assert_eq!(o2_try, o);
     }
 
     #[test]
@@ -164,7 +164,7 @@ pub mod tests {
         assert_eq!(o2, o);
 
         let o2_try = TestStructMutStr::try_from_bytes(&mut buf).unwrap();
-        assert_eq!(*o2_try, o);
+        assert_eq!(o2_try, o);
     }
 
     #[test]
@@ -180,7 +180,7 @@ pub mod tests {
         let o2 = TestStructStr::from_bytes(&buf);
         assert_eq!(o2, o);
         let o2_try = TestStructStr::try_from_bytes(&buf).unwrap();
-        assert_eq!(*o2_try, o);
+        assert_eq!(o2_try, o);
     }
 
     #[test]
@@ -200,7 +200,7 @@ pub mod tests {
         assert_eq!(o_new, o_new_reference);
 
         let o_try = CompatTestStructNew::try_from_bytes(&buf_old).unwrap();
-        assert_eq!(*o_try, o_new_reference);
+        assert_eq!(o_try, o_new_reference);
     }
 
     #[test]
@@ -227,7 +227,7 @@ pub mod tests {
         }
 
         let o_try = CompatTestStructMutNew::try_from_bytes(&mut buf_old).unwrap();
-        assert_eq!(*o_try, o_new_reference)
+        assert_eq!(o_try, o_new_reference)
     }
 
     #[test]
@@ -247,7 +247,7 @@ pub mod tests {
         assert_eq!(o_new, o_new_reference);
 
         let o_try = CompatTestStructNewStr::try_from_bytes(&buf_old).unwrap();
-        assert_eq!(*o_try, o_new_reference);
+        assert_eq!(o_try, o_new_reference);
     }
 
     #[test]
@@ -274,7 +274,7 @@ pub mod tests {
         }
 
         let o_try = CompatTestStructMutNewStr::try_from_bytes(&mut buf_old).unwrap();
-        assert_eq!(*o_try, o_new_reference);
+        assert_eq!(o_try, o_new_reference);
     }
 
     #[test]
@@ -289,7 +289,7 @@ pub mod tests {
 
         // Should succeed
         let o2 = TestStruct::try_from_bytes(&buf).unwrap();
-        assert_eq!(*o2, o);
+        assert_eq!(o2, o);
 
         // TestStructMut (mutable)
         let a_mut = &mut rand::random();
@@ -305,7 +305,7 @@ pub mod tests {
 
         // Should succeed
         let o2_mut = TestStructMut::try_from_bytes(&mut buf_mut).unwrap();
-        assert_eq!(*o2_mut, o_mut);
+        assert_eq!(o2_mut, o_mut);
 
         // TestStructStr
         let a_str = &rand::random();
@@ -321,7 +321,7 @@ pub mod tests {
 
         // Should succeed
         let o2_str = TestStructStr::try_from_bytes(&buf_str).unwrap();
-        assert_eq!(*o2_str, o_str);
+        assert_eq!(o2_str, o_str);
 
         // TestStructMutStr
         let a_mut_str = &mut rand::random();
@@ -337,7 +337,7 @@ pub mod tests {
 
         // Should succeed
         let o2_mut_str = TestStructMutStr::try_from_bytes(&mut buf_mut_str).unwrap();
-        assert_eq!(*o2_mut_str, o_mut_str);
+        assert_eq!(o2_mut_str, o_mut_str);
     }
 
     #[test]
@@ -462,7 +462,7 @@ pub mod tests {
         let o_from = TestStruct::from_bytes(&buf);
         let o_try = TestStruct::try_from_bytes(&buf).unwrap();
         assert_eq!(
-            o_from, *o_try,
+            o_from, o_try,
             "from_bytes and try_from_bytes differ on valid data"
         );
 
@@ -481,7 +481,7 @@ pub mod tests {
         let o_from_mut = TestStructMut::from_bytes(&mut buf_mut_clone);
         let o_try_mut = TestStructMut::try_from_bytes(&mut buf_mut).unwrap();
         assert_eq!(
-            o_from_mut, *o_try_mut,
+            o_from_mut, o_try_mut,
             "from_bytes and try_from_bytes differ on valid data (mutable)"
         );
     }
@@ -517,7 +517,7 @@ pub mod tests {
         // The new struct should parse the old buffer correctly.
         let o_new = CompatTestStructNew::try_from_bytes(&buf_old)
             .expect("try_from_bytes should succeed for new struct on old buffer");
-        assert_eq!(*o_new, o_new_reference);
+        assert_eq!(o_new, o_new_reference);
     }
 
     #[test]
@@ -541,6 +541,6 @@ pub mod tests {
 
         // The new struct should parse the old buffer correctly using try_from_bytes
         let o_new = CompatTestStructNewStr::try_from_bytes(&buf_old).unwrap();
-        assert_eq!(*o_new, o_new_reference);
+        assert_eq!(o_new, o_new_reference);
     }
 }
