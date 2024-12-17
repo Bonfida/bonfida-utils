@@ -197,10 +197,10 @@ pub fn process(mut ast: syn::DeriveInput, is_mut: bool) -> TokenStream {
                         Self {#(#field_idents: #cast_from_bytes_statements),*}
                     }
 
-                    fn try_from_bytes(buffer: #buffer_type) -> Result<Box<Self>, std::io::Error> {
+                    fn try_from_bytes(buffer: #buffer_type) -> Result<Self, std::io::Error> {
                         #(#try_split_statements)*
                         let res = Self {#(#field_idents: #try_cast_from_bytes_statements),*};
-                        Ok(Box::new(res))
+                        Ok(res)
                     }
                 }
             );
