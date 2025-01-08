@@ -32,6 +32,24 @@ pub enum TargetLang {
     AnchorIdl,
 }
 
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub enum UnknownTypeDefault {
+    Enum,
+    Struct,
+}
+
+impl FromStr for UnknownTypeDefault {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "enum" => Ok(Self::Enum),
+            "struct" => Ok(Self::Struct),
+            _ => Err(()),
+        }
+    }
+}
+
 pub fn command() -> Command<'static> {
     Command::new(crate_name!())
         .version(crate_version!())
@@ -91,6 +109,13 @@ pub fn command() -> Command<'static> {
                 .long("no-state")
                 .action(clap::ArgAction::SetTrue),
         )
+        .arg(
+            Arg::with_name("unknown-type")
+                .short('t')
+                .long("unknown-type")
+                .action(clap::ArgAction::Append)
+                .help("Specify a struct type's length"),
+        )
 }
 
 pub fn process(matches: &ArgMatches) {
@@ -100,6 +125,19 @@ pub fn process(matches: &ArgMatches) {
     let target_lang_str = matches.value_of("target-lang").unwrap();
     let state_folder = matches.value_of("state-folder").unwrap();
     let skip_account_tag = matches.contains_id("skip-account-tag");
+    let unknown_types = matches
+        .get_many::<String>("unknown-type")
+        .map(|v| {
+            v.map(|v| {
+                let (id, length) = v
+                    .split_once(',')
+                    .expect("Arguments to unknown-type should be of the form <TYPE_NAME>,<LENGTH>");
+                let length = u64::from_str(length).expect("Type length is not a valid integer");
+                (id.to_owned(), length)
+            })
+            .collect::<HashMap<_, _>>()
+        })
+        .unwrap_or_default();
     let target_lang = match target_lang_str {
         "js" | "javascript" => TargetLang::Javascript,
         "py" | "python" => TargetLang::Python,
@@ -134,6 +172,7 @@ pub fn process(matches: &ArgMatches) {
                 },
                 skip_account_tag,
                 no_state,
+                &unknown_types,
             );
         }
     }
@@ -152,6 +191,7 @@ pub fn generate(
     output_path: &str,
     skip_account_tag: bool,
     no_state: bool,
+    unknown_types: &HashMap<String, u64>,
 ) {
     let path = std::path::Path::new(instructions_path);
     let (instruction_tags, use_casting) = parse_instructions_enum(instructions_enum_path);
@@ -187,17 +227,19 @@ pub fn generate(
                 module_name, instruction_tags
             )
         });
-        match target_lang {
-            TargetLang::Javascript => {
+        eprintln!("Processing {}", file.file_name().into_string().unwrap());
+        match (target_lang, unknown_types.is_empty()) {
+            (TargetLang::Javascript, _) => {
                 let s = js_process_file(
                     &module_name,
                     *instruction_tag,
                     file.path().to_str().unwrap(),
                     use_casting,
+                    unknown_types,
                 );
                 output.push_str(&s)
             }
-            TargetLang::Python => {
+            (TargetLang::Python, true) => {
                 let s = py_process_file(
                     &module_name,
                     *instruction_tag,
@@ -206,12 +248,13 @@ pub fn generate(
                 );
                 output.push_str(&s)
             }
-            TargetLang::AnchorIdl => {
+            (TargetLang::AnchorIdl, true) => {
                 let i = idl_process_file(&module_name, file.path().to_str().unwrap());
                 if let Some(i) = i {
                     idl.instructions.push(i)
                 }
             }
+            _ => unimplemented!(),
         };
     }
 

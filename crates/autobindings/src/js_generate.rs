@@ -1,13 +1,13 @@
-use std::{fs::File, io::Read};
+use std::{collections::HashMap, fs::File, io::Read};
 
 use syn::{
     AngleBracketedGenericArguments, Expr, ExprLit, Field, GenericArgument, Lit, Path,
-    PathArguments, Type, TypeArray, TypePath,
+    PathArguments, Type, TypeArray, TypePath, TypeReference, TypeSlice,
 };
 
 use crate::{
     find_struct, get_constraints, get_struct_fields, is_option, is_slice, padding_len,
-    snake_to_camel,
+    snake_to_camel, UnknownTypeDefault,
 };
 
 pub fn js_process_file(
@@ -15,6 +15,7 @@ pub fn js_process_file(
     instruction_tag: usize,
     path: &str,
     use_casting: bool,
+    unknown_types: &HashMap<String, u64>,
 ) -> String {
     let mut f = File::open(path).unwrap();
     let mut raw_string = String::new();
@@ -59,7 +60,11 @@ pub fn js_process_file(
     } in params_fields
     {
         let camel_case_ident = snake_to_camel(&ident.as_ref().unwrap().to_string());
-        schema_statements.push(format!("{}: {},", camel_case_ident, type_to_borsh_js(&ty)));
+        schema_statements.push(format!(
+            "{}: {},",
+            camel_case_ident,
+            type_to_borsh_js(&ty, unknown_types)
+        ));
         if camel_case_ident == "padding" {
             declaration_statements.push("padding: Uint8Array;".to_owned());
             assign_statements.push(format!(
@@ -67,7 +72,11 @@ pub fn js_process_file(
                 padding_len(&ty)
             ));
         } else {
-            declaration_statements.push(format!("{}: {};", camel_case_ident, type_to_js(&ty)));
+            declaration_statements.push(format!(
+                "{}: {};",
+                camel_case_ident,
+                type_to_js(&ty, unknown_types)
+            ));
             assign_statements.push(js_type_assignment(&ty, &camel_case_ident));
         }
     }
@@ -155,23 +164,10 @@ pub fn js_process_file(
 }
 
 fn js_type_assignment(ty: &Type, camel_case_ident: &str) -> String {
-    match ty {
-        Type::Path(_) => format!("this.{} = obj.{};", camel_case_ident, camel_case_ident),
-        Type::Array(TypeArray {
-            bracket_token: _,
-            elem: _,
-            semi_token: _,
-            len:
-                Expr::Lit(ExprLit {
-                    attrs: _,
-                    lit: Lit::Int(_),
-                }),
-        }) => format!("this.{} = obj.{};", camel_case_ident, camel_case_ident),
-        _ => unimplemented!(),
-    }
+    format!("this.{} = obj.{};", camel_case_ident, camel_case_ident)
 }
 
-fn type_to_js(ty: &Type) -> String {
+fn type_to_js(ty: &Type, unknown_types: &HashMap<String, u64>) -> String {
     match ty {
         Type::Path(TypePath {
             qself: _,
@@ -197,7 +193,7 @@ fn type_to_js(ty: &Type) -> String {
                     }) = &segment.arguments
                     {
                         if let GenericArgument::Type(t) = args.first().unwrap() {
-                            let inner_type = type_to_js(t);
+                            let inner_type = type_to_js(t, unknown_types);
                             format!("{}[]", &inner_type)
                         } else {
                             unimplemented!()
@@ -215,7 +211,7 @@ fn type_to_js(ty: &Type) -> String {
                     }) = &segment.arguments
                     {
                         if let GenericArgument::Type(t) = args.first().unwrap() {
-                            let inner_type = type_to_js(t);
+                            let inner_type = type_to_js(t, unknown_types);
                             format!("{} | null", &inner_type)
                         } else {
                             unimplemented!()
@@ -224,7 +220,14 @@ fn type_to_js(ty: &Type) -> String {
                         unreachable!()
                     }
                 }
-                _ => "number".to_owned(), // We assume this is an enum
+                s => {
+                    if unknown_types.contains_key(s) {
+                        "Uint8Array".to_owned()
+                    } else {
+                        eprintln!("Assuming {s} is an enum");
+                        "number".to_owned() // We assume this is an enum
+                    }
+                }
             }
         }
         Type::Array(TypeArray {
@@ -233,8 +236,13 @@ fn type_to_js(ty: &Type) -> String {
             semi_token: _,
             len: _,
         }) => {
-            let inner_type = type_to_borsh_js(elem);
+            let inner_type = type_to_borsh_js(elem, unknown_types);
             array_to_js(&inner_type)
+        }
+        Type::Reference(TypeReference { elem, .. }) => type_to_js(elem, unknown_types),
+        Type::Slice(TypeSlice { elem, .. }) => {
+            let inner_type = type_to_js(elem, unknown_types);
+            format!("{}[]", &inner_type)
         }
         _ => unimplemented!(),
     }
@@ -250,7 +258,7 @@ fn array_to_js(inner_type: &str) -> String {
     .to_owned()
 }
 
-fn type_to_borsh_js(ty: &Type) -> String {
+fn type_to_borsh_js(ty: &Type, unknown_types: &HashMap<String, u64>) -> String {
     match ty {
         Type::Path(TypePath {
             qself: _,
@@ -279,7 +287,7 @@ fn type_to_borsh_js(ty: &Type) -> String {
                     }) = &segment.arguments
                     {
                         if let GenericArgument::Type(t) = args.first().unwrap() {
-                            let inner_type = type_to_borsh_js(t);
+                            let inner_type = type_to_borsh_js(t, unknown_types);
                             return format!("{{ array: {{ type: {} }} }}", &inner_type);
                         } else {
                             unimplemented!()
@@ -297,7 +305,7 @@ fn type_to_borsh_js(ty: &Type) -> String {
                     }) = &segment.arguments
                     {
                         if let GenericArgument::Type(t) = args.first().unwrap() {
-                            let inner_type = type_to_borsh_js(t);
+                            let inner_type = type_to_borsh_js(t, unknown_types);
                             return format!("{{ option: {}  }}", &inner_type);
                         } else {
                             unimplemented!()
@@ -306,7 +314,13 @@ fn type_to_borsh_js(ty: &Type) -> String {
                         unreachable!()
                     };
                 }
-                _ => "u8".to_owned(), // We assume this is an enum
+                s => {
+                    if let Some(n) = unknown_types.get(s) {
+                        return format!("{{ array: {{ type: \"u8\", len: {n} }} }}");
+                    } else {
+                        "u8".to_owned() // We assume this is an enum
+                    }
+                }
             };
             format!("\"{}\"", t)
         }
@@ -320,7 +334,7 @@ fn type_to_borsh_js(ty: &Type) -> String {
                     lit: Lit::Int(l),
                 }),
         }) => {
-            let inner_type = type_to_borsh_js(elem);
+            let inner_type = type_to_borsh_js(elem, unknown_types);
             let mut unsigned_type = "u".to_owned();
             <String as std::fmt::Write>::write_str(
                 &mut unsigned_type,
@@ -339,6 +353,11 @@ fn type_to_borsh_js(ty: &Type) -> String {
                 }
             }
         }
-        _ => unimplemented!(),
+        Type::Reference(TypeReference { elem, .. }) => type_to_borsh_js(elem, unknown_types),
+        Type::Slice(TypeSlice { elem, .. }) => {
+            let inner_type = type_to_borsh_js(elem, unknown_types);
+            format!("{{ array: {{ type: {} }} }}", &inner_type)
+        }
+        _ => unimplemented!("{ty:?}"),
     }
 }
