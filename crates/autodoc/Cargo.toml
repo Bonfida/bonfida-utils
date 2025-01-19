@@ -1,7 +1,7 @@
 [package]
 name = "bonfida-autodoc"
 description = "Utility to generate documentation for Solana Program instructions"
-version = "0.6.6"
+version = "0.6.7"
 license = "MIT"
 edition = "2021"
 repository = "https://github.com/Bonfida/bonfida-utils.git"
