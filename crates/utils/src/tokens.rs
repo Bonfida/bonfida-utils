@@ -14,6 +14,7 @@ pub enum SupportedToken {
     Pyth,
     BSol,
     Inj,
+    Trump,
 }
 
 const USDC_MINT: Pubkey = pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
@@ -26,6 +27,7 @@ const BAT_MINT: Pubkey = pubkey!("EPeUFDgHRxs9xxEPVaL6kfGQvCon7jmAWKVUHuux1Tpz")
 const PYTH_MINT: Pubkey = pubkey!("HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3");
 const BSOL_MINT: Pubkey = pubkey!("bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1");
 const INJ_MINT: Pubkey = pubkey!("6McPRfPV6bY1e9hLxWyG54W9i9Epq75QBvXg2oetBVTB");
+const TRUMP_MINT: Pubkey = pubkey!("6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN");
 
 impl SupportedToken {
     pub const fn mint(self) -> Pubkey {
@@ -40,6 +42,7 @@ impl SupportedToken {
             SupportedToken::Pyth => PYTH_MINT,
             SupportedToken::BSol => BSOL_MINT,
             SupportedToken::Inj => INJ_MINT,
+            SupportedToken::Trump => TRUMP_MINT,
         }
     }
 
@@ -55,6 +58,7 @@ impl SupportedToken {
             PYTH_MINT => SupportedToken::Pyth,
             BSOL_MINT => SupportedToken::BSol,
             INJ_MINT => SupportedToken::Inj,
+            TRUMP_MINT => SupportedToken::Trump,
             _ => return Err(ProgramError::InvalidArgument),
         })
     }
@@ -67,7 +71,8 @@ impl SupportedToken {
             SupportedToken::USDC
             | SupportedToken::USDT
             | SupportedToken::Fida
-            | SupportedToken::Pyth => 6,
+            | SupportedToken::Pyth
+            | SupportedToken::Trump => 6,
         }
     }
 
@@ -83,6 +88,7 @@ impl SupportedToken {
             SupportedToken::Pyth => pubkey!("8vjchtMuJNY4oFQdTi8yCe6mhCaNBFaUbktT482TpLPS"),
             SupportedToken::BSol => pubkey!("5cN76Xm2Dtx9MnrQqBDeZZRsWruTTcw37UruznAdSvvE"),
             SupportedToken::Inj => pubkey!("GwXYEfmPdgHcowF9GZwbb1WiTGTn1fuT3hbSLneoBKK6"),
+            SupportedToken::Trump => pubkey!("9vNb2tQoZ8bB4vzMbQLWViGwNaDJVtct13AGgno1wazp"),
         }
     }
 
@@ -127,6 +133,10 @@ impl SupportedToken {
             SupportedToken::Inj => [
                 122, 91, 193, 210, 181, 106, 208, 41, 4, 140, 214, 57, 100, 179, 173, 39, 118, 234,
                 223, 129, 46, 220, 26, 67, 163, 20, 6, 203, 84, 191, 245, 146,
+            ],
+            SupportedToken::Trump => [
+                135, 149, 81, 2, 24, 83, 238, 199, 167, 220, 130, 117, 120, 232, 230, 157, 167,
+                228, 250, 129, 72, 51, 154, 160, 211, 213, 41, 100, 5, 190, 75, 26,
             ],
         }
     }
@@ -179,6 +189,10 @@ mod test {
             SupportedToken::Inj.price_feed_account_key(),
             get_pyth_feed_account_key(0, &SupportedToken::Inj.price_feed())
         );
+        assert_eq!(
+            SupportedToken::Trump.price_feed_account_key(),
+            get_pyth_feed_account_key(0, &SupportedToken::Trump.price_feed())
+        )
     }
 
     #[test]
@@ -241,6 +255,12 @@ mod test {
         assert_eq!(
             SupportedToken::Inj.price_feed(),
             hex::decode("7a5bc1d2b56ad029048cd63964b3ad2776eadf812edc1a43a31406cb54bff592")
+                .unwrap()
+                .as_slice()
+        );
+        assert_eq!(
+            SupportedToken::Trump.price_feed(),
+            hex::decode("879551021853eec7a7dc827578e8e69da7e4fa8148339aa0d3d5296405be4b1a")
                 .unwrap()
                 .as_slice()
         );
