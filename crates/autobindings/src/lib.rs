@@ -3,9 +3,10 @@ use cargo_toml::Manifest;
 use clap::{crate_name, crate_version, Arg, ArgMatches, Command};
 use convert_case::{Boundary, Case, Casing};
 use idl_generate::{idl_process_file, idl_process_state_file};
+use js_generate::{js_generate_state_files, JSOutput, ACCOUNT_KEY_INTERFACE, IMPORTS};
 use proc_macro2::TokenTree;
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fs::{self, File},
     io::{Read, Write},
     str::FromStr,
@@ -14,21 +15,19 @@ use std::{
 
 use syn::{
     punctuated::Punctuated, token::Comma, Attribute, Expr, ExprLit, Field, Fields, FieldsNamed,
-    Item, ItemEnum, ItemStruct, Lit, Path, Type, TypeArray, TypePath, TypeReference, Variant,
+    Item, ItemEnum, ItemStruct, Lit, Meta, NestedMeta, Path, Type, TypeArray, TypePath,
+    TypeReference, Variant,
 };
 
 use crate::js_generate::js_process_file;
-use crate::py_generate::py_process_file;
 
 pub mod idl_generate;
 pub mod js_generate;
-pub mod py_generate;
 pub mod test;
 
 #[derive(Debug, Clone, Copy)]
 pub enum TargetLang {
     Javascript,
-    Python,
     AnchorIdl,
 }
 
@@ -72,7 +71,7 @@ pub fn command() -> Command<'static> {
                 .long("target-language")
                 .takes_value(true)
                 .default_value("js")
-                .help("Enter \"py\", \"js\" or \"idl\""),
+                .help("Enter \"js\" or \"idl\""),
         )
         .arg(
             Arg::with_name("test")
@@ -91,6 +90,12 @@ pub fn command() -> Command<'static> {
                 .long("no-state")
                 .action(clap::ArgAction::SetTrue),
         )
+        .arg(
+            Arg::with_name("structs")
+                .long("structs")
+                .default_value("")
+                .help("Enter the list comma separated of structs you want to generate state for. Structs used in instruction params are by default generated"),
+        )
 }
 
 pub fn process(matches: &ArgMatches) {
@@ -99,10 +104,16 @@ pub fn process(matches: &ArgMatches) {
     let cargo_toml_path = matches.value_of("toml-path").unwrap();
     let target_lang_str = matches.value_of("target-lang").unwrap();
     let state_folder = matches.value_of("state-folder").unwrap();
+    let struct_names = matches
+        .value_of("structs")
+        .unwrap()
+        .split(",")
+        .map(String::from)
+        .collect::<Vec<_>>();
+
     let skip_account_tag = matches.contains_id("skip-account-tag");
     let target_lang = match target_lang_str {
         "js" | "javascript" => TargetLang::Javascript,
-        "py" | "python" => TargetLang::Python,
         "idl" | "anchor-idl" => TargetLang::AnchorIdl,
         _ => {
             println!("Target language must be javascript or python");
@@ -113,6 +124,7 @@ pub fn process(matches: &ArgMatches) {
     let no_state = matches.get_flag("no-state");
     fs::create_dir_all("../js/src/").unwrap();
     fs::create_dir_all("../python/src/").unwrap();
+    fs::create_dir_all("../js/src/raw_state").unwrap();
 
     let now = Instant::now();
 
@@ -129,11 +141,11 @@ pub fn process(matches: &ArgMatches) {
                 target_lang,
                 match target_lang {
                     TargetLang::Javascript => "../js/src/raw_instructions.ts",
-                    TargetLang::Python => "../python/src/raw_instructions.py",
                     TargetLang::AnchorIdl => "idl.json",
                 },
                 skip_account_tag,
                 no_state,
+                struct_names,
             );
         }
     }
@@ -152,7 +164,12 @@ pub fn generate(
     output_path: &str,
     skip_account_tag: bool,
     no_state: bool,
+    struct_names: Vec<String>,
 ) {
+    let mut imports = HashSet::new();
+    let mut custom_types = HashSet::new();
+    let mut optional_types = HashSet::new();
+    custom_types.extend(struct_names);
     let path = std::path::Path::new(instructions_path);
     let (instruction_tags, use_casting) = parse_instructions_enum(instructions_enum_path);
     let directory = std::fs::read_dir(path).unwrap();
@@ -189,23 +206,24 @@ pub fn generate(
         });
         match target_lang {
             TargetLang::Javascript => {
-                let s = js_process_file(
+                let JSOutput {
+                    content,
+                    imports: local_imports,
+                    custom_types: local_custom_types,
+                    optional_types: local_optional_types,
+                } = js_process_file(
                     &module_name,
                     *instruction_tag,
                     file.path().to_str().unwrap(),
                     use_casting,
                 );
-                output.push_str(&s)
+                imports.extend(local_imports);
+                custom_types.extend(local_custom_types);
+                optional_types.extend(local_optional_types);
+
+                output.push_str(&content)
             }
-            TargetLang::Python => {
-                let s = py_process_file(
-                    &module_name,
-                    *instruction_tag,
-                    file.path().to_str().unwrap(),
-                    use_casting,
-                );
-                output.push_str(&s)
-            }
+
             TargetLang::AnchorIdl => {
                 let i = idl_process_file(&module_name, file.path().to_str().unwrap());
                 if let Some(i) = i {
@@ -213,6 +231,43 @@ pub fn generate(
                 }
             }
         };
+    }
+
+    // Add imports at the very beginning of output
+    if matches!(target_lang, TargetLang::Javascript) {
+        output.insert_str(0, ACCOUNT_KEY_INTERFACE);
+        output.insert(0, '\n');
+        for import in imports {
+            output.insert_str(0, &format!("{}\n", import));
+        }
+        output.insert(0, '\n');
+        // Add standard imports first
+        for import in IMPORTS {
+            output.insert_str(0, &format!("{}\n", import));
+        }
+        output.insert(0, '\n');
+    }
+
+    if matches!(target_lang, TargetLang::Javascript) {
+        // Assume you have collected your custom types into a set called "custom_types"
+        let custom_state_outputs =
+            js_generate_state_files(state_folder_path, &custom_types, &optional_types);
+
+        // Ensure the output directory exists before writing any files
+        let output_dir = "../js/src/raw_state";
+
+        for (custom_type, js_output) in custom_state_outputs {
+            let output_path = format!("{}/{}.ts", output_dir, pascal_to_snake(&custom_type));
+            std::fs::write(
+                output_path,
+                format!(
+                    "{}\n{}",
+                    js_output.imports.into_iter().collect::<Vec<_>>().join("\n"),
+                    js_output.content
+                ),
+            )
+            .expect("Failed to write state file");
+        }
     }
 
     if matches!(target_lang, TargetLang::AnchorIdl) {
@@ -285,7 +340,6 @@ pub fn parse_account_tag_enum(account_tag_enum_path: &str) -> HashMap<String, us
 pub fn get_header(target_lang: TargetLang) -> String {
     match target_lang {
         TargetLang::Javascript => include_str!("templates/template.ts").to_string(),
-        TargetLang::Python => include_str!("templates/template.py").to_string(),
         TargetLang::AnchorIdl => String::new(),
     }
 }
@@ -334,6 +388,19 @@ fn padding_len(ty: &Type) -> u8 {
 fn snake_to_camel(s: &str) -> String {
     s.from_case(Case::Snake).to_case(Case::Camel)
 }
+
+fn to_file_name(s: &str) -> String {
+    s.to_case(convert_case::Case::Snake)
+}
+
+fn capitalize_first_letter(s: &str) -> String {
+    let mut c = s.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+    }
+}
+
 fn snake_to_pascal(s: &str) -> String {
     s.from_case(Case::Snake).to_case(Case::Pascal)
 }
@@ -342,6 +409,8 @@ fn pascal_to_snake(s: &str) -> String {
         .without_boundaries(&[Boundary::UpperDigit, Boundary::DigitLower])
         .to_case(Case::Snake)
 }
+
+#[allow(dead_code)]
 fn lower_to_upper(s: &str) -> String {
     s.from_case(Case::Lower).to_case(Case::Upper)
 }
@@ -391,9 +460,27 @@ fn get_struct_fields(s: Item) -> Punctuated<Field, Comma> {
     }) = s
     {
         named
+            .into_iter()
+            .filter(|field| !has_cfg_test(&field.attrs))
+            .collect()
     } else {
         unreachable!()
     }
+}
+
+/// Checks if any of the given attributes is a `#[cfg(test)]` attribute.
+fn has_cfg_test(attrs: &[Attribute]) -> bool {
+    attrs.iter().any(|attr| {
+        if attr.path.is_ident("cfg") {
+            if let Ok(Meta::List(meta_list)) = attr.parse_meta() {
+                return meta_list.nested.iter().any(|nested| match nested {
+                    NestedMeta::Meta(Meta::Path(path)) => path.is_ident("test"),
+                    _ => false,
+                });
+            }
+        }
+        false
+    })
 }
 
 fn get_constraints(attrs: &[Attribute]) -> (bool, bool) {
@@ -454,4 +541,19 @@ fn is_option(ty: &Type) -> bool {
         return true;
     }
     false
+}
+
+/// Returns the underlying type if `s` is a newtype struct,
+/// i.e. a tuple struct with a single field. e.g struct Something(pub u64)
+fn is_newtype_struct(s: &Item) -> Option<&Type> {
+    if let Item::Struct(ItemStruct {
+        fields: syn::Fields::Unnamed(unnamed),
+        ..
+    }) = s
+    {
+        if unnamed.unnamed.len() == 1 {
+            return Some(&unnamed.unnamed.first().unwrap().ty);
+        }
+    }
+    None
 }

@@ -719,11 +719,13 @@ dependencies = [
  "clap 3.2.25",
  "convert_case",
  "hex",
+ "once_cell",
  "proc-macro2",
  "rand 0.8.5",
  "serde",
  "serde_json",
  "syn 1.0.109",
+ "walkdir",
 ]
 
 [[package]]
