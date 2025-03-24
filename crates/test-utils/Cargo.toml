@@ -1,6 +1,6 @@
 [package]
 name = "bonfida-test-utils"
-version = "0.6.7"
+version = "0.7.0"
 authors = ["ellttBen <elliott@bonfida.com>"]
 description = "Solana program testing utilities when working with bonfida-utils."
 license = "MIT"
@@ -10,9 +10,9 @@ repository = "https://github.com/Bonfida/bonfida-utils.git"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-solana-program = "1.18.11"
-solana-program-test = "1.18.11"
-solana-sdk = "1.18.11"
-spl-token = "4.0.0"
+solana-program = "^2.1"
+solana-program-test = "^2.1"
+solana-sdk = { version = "^2.1", features = ["full"] }
+spl-token = "7.0.0"
 async-trait = "0.1.56"
-spl-associated-token-account = "3.0.2"
+spl-associated-token-account = "6.0.0"
