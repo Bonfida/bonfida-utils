@@ -776,19 +776,6 @@ dependencies = [
 
 [[package]]
 name = "bonfida-macros"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d6151ea38af194d0ae112fb9b80ed48ad65b497e7dd24621593d485741c5666"
-dependencies = [
- "proc-macro2",
- "quote",
- "solana-program",
- "spl-name-service",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "bonfida-macros"
 version = "0.6.8"
 dependencies = [
  "proc-macro2",
@@ -814,8 +801,7 @@ dependencies = [
 name = "bonfida-utils"
 version = "0.6.8"
 dependencies = [
- "bonfida-macros 0.6.2",
- "bonfida-macros 0.6.8",
+ "bonfida-macros",
  "borsh 0.10.4",
  "bytemuck",
  "hex",

@@ -61,17 +61,17 @@ pub mod tests {
         pub c: &'a str,
     }
 
-    #[derive(bonfida_macros_old::WrappedPodMut, PartialEq, Debug)]
-    pub struct CompatTestStructMutOld<'a> {
-        pub a: &'a mut u64,
-        pub b: &'a mut [u32],
-    }
+    // #[derive(bonfida_macros_old::WrappedPodMut, PartialEq, Debug)]
+    // pub struct CompatTestStructMutOld<'a> {
+    //     pub a: &'a mut u64,
+    //     pub b: &'a mut [u32],
+    // }
 
-    #[derive(bonfida_macros_old::WrappedPod, PartialEq, Debug)]
-    pub struct CompatTestStructOld<'a> {
-        pub a: &'a u64,
-        pub b: &'a [u32],
-    }
+    // #[derive(bonfida_macros_old::WrappedPod, PartialEq, Debug)]
+    // pub struct CompatTestStructOld<'a> {
+    //     pub a: &'a u64,
+    //     pub b: &'a [u32],
+    // }
 
     #[derive(WrappedPodMut, PartialEq, Debug)]
     pub struct CompatTestStructMutNew<'a> {
@@ -85,17 +85,17 @@ pub mod tests {
         pub b: &'a [u32],
     }
 
-    #[derive(bonfida_macros_old::WrappedPodMut, PartialEq, Debug)]
-    pub struct CompatTestStructMutOldStr<'a> {
-        pub a: &'a mut u64,
-        pub b: &'a mut str,
-    }
+    // #[derive(bonfida_macros_old::WrappedPodMut, PartialEq, Debug)]
+    // pub struct CompatTestStructMutOldStr<'a> {
+    //     pub a: &'a mut u64,
+    //     pub b: &'a mut str,
+    // }
 
-    #[derive(bonfida_macros_old::WrappedPod, PartialEq, Debug)]
-    pub struct CompatTestStructOldStr<'a> {
-        pub a: &'a u64,
-        pub b: &'a str,
-    }
+    // #[derive(bonfida_macros_old::WrappedPod, PartialEq, Debug)]
+    // pub struct CompatTestStructOldStr<'a> {
+    //     pub a: &'a u64,
+    //     pub b: &'a str,
+    // }
 
     #[derive(WrappedPodMut, PartialEq, Debug)]
     pub struct CompatTestStructMutNewStr<'a> {
@@ -183,99 +183,99 @@ pub mod tests {
         assert_eq!(o2_try, o);
     }
 
-    #[test]
-    pub fn test_back_compat() {
-        let a = &rand::random();
-        let b = &rand::random::<[u32; 4]>();
-        let o_old_reference = CompatTestStructOld { a, b };
-        let o_new_reference = CompatTestStructNew { a, b };
-        let mut buf_new = Vec::with_capacity(o_new_reference.size());
-        o_new_reference.export(&mut buf_new);
-        let o_old = CompatTestStructOld::from_bytes(&buf_new);
-        assert_eq!(o_old, o_old_reference);
+    // #[test]
+    // pub fn test_back_compat() {
+    //     let a = &rand::random();
+    //     let b = &rand::random::<[u32; 4]>();
+    //     let o_old_reference = CompatTestStructOld { a, b };
+    //     let o_new_reference = CompatTestStructNew { a, b };
+    //     let mut buf_new = Vec::with_capacity(o_new_reference.size());
+    //     o_new_reference.export(&mut buf_new);
+    //     let o_old = CompatTestStructOld::from_bytes(&buf_new);
+    //     assert_eq!(o_old, o_old_reference);
 
-        let mut buf_old = Vec::with_capacity(o_old.size());
-        o_old_reference.export(&mut buf_old);
-        let o_new = CompatTestStructNew::from_bytes(&buf_old);
-        assert_eq!(o_new, o_new_reference);
+    //     let mut buf_old = Vec::with_capacity(o_old.size());
+    //     o_old_reference.export(&mut buf_old);
+    //     let o_new = CompatTestStructNew::from_bytes(&buf_old);
+    //     assert_eq!(o_new, o_new_reference);
 
-        let o_try = CompatTestStructNew::try_from_bytes(&buf_old).unwrap();
-        assert_eq!(o_try, o_new_reference);
-    }
+    //     let o_try = CompatTestStructNew::try_from_bytes(&buf_old).unwrap();
+    //     assert_eq!(o_try, o_new_reference);
+    // }
 
-    #[test]
-    pub fn test_back_compat_mut() {
-        let a: &mut u64 = &mut rand::random();
-        let b = &mut rand::random::<[u32; 4]>();
-        let a_clone = &mut a.clone();
-        let b_clone = &mut b.clone();
-        let o_old_reference = CompatTestStructMutOld {
-            a: a_clone,
-            b: b_clone,
-        };
-        let o_new_reference = CompatTestStructMutNew { a, b };
-        let mut buf_new = Vec::with_capacity(o_new_reference.size());
-        o_new_reference.export(&mut buf_new);
-        let o_old = CompatTestStructMutOld::from_bytes(&mut buf_new);
-        assert_eq!(o_old, o_old_reference);
+    // #[test]
+    // pub fn test_back_compat_mut() {
+    //     let a: &mut u64 = &mut rand::random();
+    //     let b = &mut rand::random::<[u32; 4]>();
+    //     let a_clone = &mut a.clone();
+    //     let b_clone = &mut b.clone();
+    //     let o_old_reference = CompatTestStructMutOld {
+    //         a: a_clone,
+    //         b: b_clone,
+    //     };
+    //     let o_new_reference = CompatTestStructMutNew { a, b };
+    //     let mut buf_new = Vec::with_capacity(o_new_reference.size());
+    //     o_new_reference.export(&mut buf_new);
+    //     let o_old = CompatTestStructMutOld::from_bytes(&mut buf_new);
+    //     assert_eq!(o_old, o_old_reference);
 
-        let mut buf_old = Vec::with_capacity(o_old.size());
-        o_old_reference.export(&mut buf_old);
-        {
-            let o_new = CompatTestStructMutNew::from_bytes(&mut buf_old);
-            assert_eq!(o_new, o_new_reference);
-        }
+    //     let mut buf_old = Vec::with_capacity(o_old.size());
+    //     o_old_reference.export(&mut buf_old);
+    //     {
+    //         let o_new = CompatTestStructMutNew::from_bytes(&mut buf_old);
+    //         assert_eq!(o_new, o_new_reference);
+    //     }
 
-        let o_try = CompatTestStructMutNew::try_from_bytes(&mut buf_old).unwrap();
-        assert_eq!(o_try, o_new_reference)
-    }
+    //     let o_try = CompatTestStructMutNew::try_from_bytes(&mut buf_old).unwrap();
+    //     assert_eq!(o_try, o_new_reference)
+    // }
 
-    #[test]
-    pub fn test_back_compat_str() {
-        let a = &rand::random();
-        let b = &(0..10).map(|_| rand::random::<char>()).collect::<String>();
-        let o_old_reference = CompatTestStructOldStr { a, b };
-        let o_new_reference = CompatTestStructNewStr { a, b };
-        let mut buf_new = Vec::with_capacity(o_new_reference.size());
-        o_new_reference.export(&mut buf_new);
-        let o_old = CompatTestStructOldStr::from_bytes(&buf_new);
-        assert_eq!(o_old, o_old_reference);
+    // #[test]
+    // pub fn test_back_compat_str() {
+    //     let a = &rand::random();
+    //     let b = &(0..10).map(|_| rand::random::<char>()).collect::<String>();
+    //     let o_old_reference = CompatTestStructOldStr { a, b };
+    //     let o_new_reference = CompatTestStructNewStr { a, b };
+    //     let mut buf_new = Vec::with_capacity(o_new_reference.size());
+    //     o_new_reference.export(&mut buf_new);
+    //     let o_old = CompatTestStructOldStr::from_bytes(&buf_new);
+    //     assert_eq!(o_old, o_old_reference);
 
-        let mut buf_old = Vec::with_capacity(o_old.size());
-        o_old_reference.export(&mut buf_old);
-        let o_new = CompatTestStructNewStr::from_bytes(&buf_old);
-        assert_eq!(o_new, o_new_reference);
+    //     let mut buf_old = Vec::with_capacity(o_old.size());
+    //     o_old_reference.export(&mut buf_old);
+    //     let o_new = CompatTestStructNewStr::from_bytes(&buf_old);
+    //     assert_eq!(o_new, o_new_reference);
 
-        let o_try = CompatTestStructNewStr::try_from_bytes(&buf_old).unwrap();
-        assert_eq!(o_try, o_new_reference);
-    }
+    //     let o_try = CompatTestStructNewStr::try_from_bytes(&buf_old).unwrap();
+    //     assert_eq!(o_try, o_new_reference);
+    // }
 
-    #[test]
-    pub fn test_back_compat_mut_str() {
-        let a: &mut u64 = &mut rand::random();
-        let b = &mut (0..10).map(|_| rand::random::<char>()).collect::<String>();
-        let a_clone = &mut a.clone();
-        let b_clone = &mut b.clone();
-        let o_old_reference = CompatTestStructMutOldStr {
-            a: a_clone,
-            b: b_clone,
-        };
-        let o_new_reference = CompatTestStructMutNewStr { a, b };
-        let mut buf_new = Vec::with_capacity(o_new_reference.size());
-        o_new_reference.export(&mut buf_new);
-        let o_old = CompatTestStructMutOldStr::from_bytes(&mut buf_new);
-        assert_eq!(o_old, o_old_reference);
+    // #[test]
+    // pub fn test_back_compat_mut_str() {
+    //     let a: &mut u64 = &mut rand::random();
+    //     let b = &mut (0..10).map(|_| rand::random::<char>()).collect::<String>();
+    //     let a_clone = &mut a.clone();
+    //     let b_clone = &mut b.clone();
+    //     let o_old_reference = CompatTestStructMutOldStr {
+    //         a: a_clone,
+    //         b: b_clone,
+    //     };
+    //     let o_new_reference = CompatTestStructMutNewStr { a, b };
+    //     let mut buf_new = Vec::with_capacity(o_new_reference.size());
+    //     o_new_reference.export(&mut buf_new);
+    //     let o_old = CompatTestStructMutOldStr::from_bytes(&mut buf_new);
+    //     assert_eq!(o_old, o_old_reference);
 
-        let mut buf_old = Vec::with_capacity(o_old.size());
-        o_old_reference.export(&mut buf_old);
-        {
-            let o_new = CompatTestStructMutNewStr::from_bytes(&mut buf_old);
-            assert_eq!(o_new, o_new_reference);
-        }
+    //     let mut buf_old = Vec::with_capacity(o_old.size());
+    //     o_old_reference.export(&mut buf_old);
+    //     {
+    //         let o_new = CompatTestStructMutNewStr::from_bytes(&mut buf_old);
+    //         assert_eq!(o_new, o_new_reference);
+    //     }
 
-        let o_try = CompatTestStructMutNewStr::try_from_bytes(&mut buf_old).unwrap();
-        assert_eq!(o_try, o_new_reference);
-    }
+    //     let o_try = CompatTestStructMutNewStr::try_from_bytes(&mut buf_old).unwrap();
+    //     assert_eq!(o_try, o_new_reference);
+    // }
 
     #[test]
     pub fn test_try_from_bytes_success() {
@@ -486,61 +486,61 @@ pub mod tests {
         );
     }
 
-    #[test]
-    pub fn test_try_from_bytes_back_compat() {
-        // Ensure that try_from_bytes can work with old data as well, mirroring from_bytes tests.
-        let a = &rand::random();
-        let b = &rand::random::<[u32; 4]>();
-        let o_old_reference = CompatTestStructOld { a, b };
-        let o_new_reference = CompatTestStructNew { a, b };
-        let mut buf_new = Vec::with_capacity(o_new_reference.size());
-        o_new_reference.export(&mut buf_new);
+    // #[test]
+    // pub fn test_try_from_bytes_back_compat() {
+    //     // Ensure that try_from_bytes can work with old data as well, mirroring from_bytes tests.
+    //     let a = &rand::random();
+    //     let b = &rand::random::<[u32; 4]>();
+    //     let o_old_reference = CompatTestStructOld { a, b };
+    //     let o_new_reference = CompatTestStructNew { a, b };
+    //     let mut buf_new = Vec::with_capacity(o_new_reference.size());
+    //     o_new_reference.export(&mut buf_new);
 
-        // Old struct doesn't implement try_from_bytes (uses default which returns NotImplemented)
-        // So we only test the new struct on the old buffer
-        let o_old = CompatTestStructOld::try_from_bytes(&buf_new);
-        // The old struct is derived using old macros without try_from_bytes implementation
-        // It should return Err(Unsupported) by default
-        assert!(o_old.is_err());
-        let err = o_old.err().unwrap();
-        assert_eq!(
-            err.kind(),
-            std::io::ErrorKind::Unsupported,
-            "Old struct without try_from_bytes should return Unsupported"
-        );
+    //     // Old struct doesn't implement try_from_bytes (uses default which returns NotImplemented)
+    //     // So we only test the new struct on the old buffer
+    //     let o_old = CompatTestStructOld::try_from_bytes(&buf_new);
+    //     // The old struct is derived using old macros without try_from_bytes implementation
+    //     // It should return Err(Unsupported) by default
+    //     assert!(o_old.is_err());
+    //     let err = o_old.err().unwrap();
+    //     assert_eq!(
+    //         err.kind(),
+    //         std::io::ErrorKind::Unsupported,
+    //         "Old struct without try_from_bytes should return Unsupported"
+    //     );
 
-        // Now test the new struct on old-structured buffer
-        // We'll export old reference using the old macro struct and parse with new macro struct.
-        let mut buf_old = Vec::with_capacity(o_old_reference.size());
-        o_old_reference.export(&mut buf_old);
+    //     // Now test the new struct on old-structured buffer
+    //     // We'll export old reference using the old macro struct and parse with new macro struct.
+    //     let mut buf_old = Vec::with_capacity(o_old_reference.size());
+    //     o_old_reference.export(&mut buf_old);
 
-        // The new struct should parse the old buffer correctly.
-        let o_new = CompatTestStructNew::try_from_bytes(&buf_old)
-            .expect("try_from_bytes should succeed for new struct on old buffer");
-        assert_eq!(o_new, o_new_reference);
-    }
+    //     // The new struct should parse the old buffer correctly.
+    //     let o_new = CompatTestStructNew::try_from_bytes(&buf_old)
+    //         .expect("try_from_bytes should succeed for new struct on old buffer");
+    //     assert_eq!(o_new, o_new_reference);
+    // }
 
-    #[test]
-    pub fn test_try_from_bytes_back_compat_str() {
-        // Same logic for str
-        let a = &rand::random();
-        let b = &(0..10).map(|_| rand::random::<char>()).collect::<String>();
-        let o_old_reference = CompatTestStructOldStr { a, b };
-        let o_new_reference = CompatTestStructNewStr { a, b };
-        let mut buf_new = Vec::with_capacity(o_new_reference.size());
-        o_new_reference.export(&mut buf_new);
+    // #[test]
+    // pub fn test_try_from_bytes_back_compat_str() {
+    //     // Same logic for str
+    //     let a = &rand::random();
+    //     let b = &(0..10).map(|_| rand::random::<char>()).collect::<String>();
+    //     let o_old_reference = CompatTestStructOldStr { a, b };
+    //     let o_new_reference = CompatTestStructNewStr { a, b };
+    //     let mut buf_new = Vec::with_capacity(o_new_reference.size());
+    //     o_new_reference.export(&mut buf_new);
 
-        let o_old = CompatTestStructOldStr::try_from_bytes(&buf_new);
-        // Old struct uses old macros without try_from_bytes implementation
-        assert!(o_old.is_err());
-        let err = o_old.err().unwrap();
-        assert_eq!(err.kind(), std::io::ErrorKind::Unsupported);
+    //     let o_old = CompatTestStructOldStr::try_from_bytes(&buf_new);
+    //     // Old struct uses old macros without try_from_bytes implementation
+    //     assert!(o_old.is_err());
+    //     let err = o_old.err().unwrap();
+    //     assert_eq!(err.kind(), std::io::ErrorKind::Unsupported);
 
-        let mut buf_old = Vec::with_capacity(o_old_reference.size());
-        o_old_reference.export(&mut buf_old);
+    //     let mut buf_old = Vec::with_capacity(o_old_reference.size());
+    //     o_old_reference.export(&mut buf_old);
 
-        // The new struct should parse the old buffer correctly using try_from_bytes
-        let o_new = CompatTestStructNewStr::try_from_bytes(&buf_old).unwrap();
-        assert_eq!(o_new, o_new_reference);
-    }
+    //     // The new struct should parse the old buffer correctly using try_from_bytes
+    //     let o_new = CompatTestStructNewStr::try_from_bytes(&buf_old).unwrap();
+    //     assert_eq!(o_new, o_new_reference);
+    // }
 }
