@@ -1,7 +1,7 @@
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke_signed,
     program_error::ProgramError, program_pack::Pack, pubkey::Pubkey, rent::Rent,
-    system_instruction::create_account, sysvar::Sysvar,
+    system_instruction, sysvar::Sysvar,
 };
 
 #[allow(missing_docs)]
@@ -34,7 +34,7 @@ impl Cpi {
                 &[signer_seeds],
             )?;
         }
-        let create_state_instruction = create_account(
+        let create_state_instruction = system_instruction::create_account(
             fee_payer.key,
             account_to_create.key,
             Rent::get()?.minimum_balance(space),
@@ -67,7 +67,7 @@ impl Cpi {
         msg!("Initializing token account");
         let size = spl_token::state::Account::LEN;
         let required_lamports = Rent::get()?.minimum_balance(size);
-        let ix_allocate = create_account(
+        let ix_allocate = system_instruction::create_account(
             payer_info.key,
             token_account.key,
             required_lamports,
