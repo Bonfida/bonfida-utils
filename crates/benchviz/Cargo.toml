@@ -1,6 +1,6 @@
 [package]
 name = "bonfida-benchviz"
-version = "0.6.8"
+version = "0.6.9"
 description = "Utility for visualizing Solana Program benchmark results"
 license = "MIT"
 edition = "2021"
