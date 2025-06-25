@@ -10,9 +10,9 @@ repository = "https://github.com/Bonfida/bonfida-utils.git"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-solana-program = "1.18.11"
-solana-program-test = "1.18.11"
-solana-sdk = "1.18.11"
+solana-program = { workspace = true }
+solana-program-test = { workspace = true }
+solana-sdk = { workspace = true }
 spl-token = "4.0.0"
 async-trait = "0.1.56"
 spl-associated-token-account = "3.0.2"

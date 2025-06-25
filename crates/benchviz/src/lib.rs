@@ -68,7 +68,7 @@ pub fn process(_matches: &ArgMatches) {
             plot.lines_points(&measures.x, &measures.y, &[PlotOption::Caption(&caption)]);
         }
 
-        let path = graph_output_path.join(&format!("{name}.png"));
+        let path = graph_output_path.join(format!("{name}.png"));
         figure.save_to_png(&path, 1920, 1080).unwrap();
     }
 }

@@ -6,6 +6,8 @@ mod compute_record_hash_v2;
 mod declare_id_with_central_state;
 mod wrapped_pod;
 
+pub(crate) const SPL_NAME_SERVICE_HASH_PREFIX: &str = "SPL Name Service";
+
 #[proc_macro_derive(InstructionsAccount, attributes(cons))]
 pub fn derive_instructions_account(item: TokenStream) -> TokenStream {
     let ast = syn::parse(item).unwrap();

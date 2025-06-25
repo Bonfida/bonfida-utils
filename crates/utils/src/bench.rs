@@ -113,7 +113,7 @@ impl BenchRunner {
         command.arg("--test");
         command.arg(self.test_name);
         for (i, v) in arguments.iter().enumerate() {
-            command.env(&format!("ARGUMENT_{}", i), v);
+            command.env(format!("ARGUMENT_{}", i), v);
         }
         let output = command.output().unwrap();
         self.parse(output)
@@ -142,7 +142,7 @@ where
 pub fn get_env_args() -> Vec<String> {
     let mut i = 0;
     let mut result = vec![];
-    while let Ok(s) = std::env::var(&format!("ARGUMENT_{}", i)) {
+    while let Ok(s) = std::env::var(format!("ARGUMENT_{}", i)) {
         result.push(s);
         i += 1;
     }

@@ -2,16 +2,16 @@ use crate::{checks::check_account_owner, tokens::SupportedToken};
 use borsh::BorshDeserialize;
 use pyth_sdk_solana::{
     state::{
-        load_mapping_account, load_price_account, load_product_account, CorpAction, PriceStatus,
-        PriceType,
+        load_mapping_account, load_product_account, CorpAction, PriceStatus, PriceType,
+        SolanaPriceAccount,
     },
     Price,
 };
 use pyth_solana_receiver_sdk::price_update::PriceUpdateV2;
-use solana_program::pubkey;
 use solana_program::{
     account_info::AccountInfo, clock::Clock, msg, program_error::ProgramError, pubkey::Pubkey,
 };
+use solana_program::{pubkey, sysvar::Sysvar};
 use std::convert::TryInto;
 
 pub const DEFAULT_PYTH_PUSH: Pubkey = pubkey!("pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT");
@@ -27,25 +27,21 @@ pub fn check_price_acc_key(
     let map_acct = load_mapping_account(mapping_acc_data).unwrap();
 
     // Get and print each Product in Mapping directory
-    for prod_akey in &map_acct.products {
-        let prod_key = Pubkey::from(prod_akey.val);
-
-        if *product_acc_key != prod_key {
+    for prod_key in &map_acct.products {
+        if product_acc_key != prod_key {
             continue;
         }
         msg!("Found product in mapping.");
 
         let prod_acc = load_product_account(product_acc_data).unwrap();
 
-        if !prod_acc.px_acc.is_valid() {
+        if prod_acc.px_acc == Pubkey::default() {
             msg!("Price account is invalid.");
             break;
         }
 
         // Check only the first price account
-        let px_key = Pubkey::from(prod_acc.px_acc.val);
-
-        if *price_acc_key == px_key {
+        if price_acc_key == &prod_acc.px_acc {
             msg!("Found correct price account in product.");
             return Ok(());
         }
@@ -56,7 +52,8 @@ pub fn check_price_acc_key(
 }
 
 pub fn get_oracle_price_fp32(
-    account_data: &[u8],
+    price_account_info: &AccountInfo,
+    no_older_than_s: u64,
     base_decimals: u8,
     quote_decimals: u8,
 ) -> Result<u64, ProgramError> {
@@ -69,10 +66,10 @@ pub fn get_oracle_price_fp32(
     };
 
     // Pyth Oracle
-    let price_account = load_price_account(account_data)?;
+    let price_account = SolanaPriceAccount::account_info_to_feed(price_account_info)?;
+    // load_price_account(account_data)?;
     let Price { price, expo, .. } = price_account
-        .to_price_feed(&Pubkey::default())
-        .get_current_price()
+        .get_price_no_older_than(Clock::get()?.unix_timestamp, no_older_than_s)
         .ok_or_else(|| {
             msg!("Cannot parse pyth price, information unavailable.");
             ProgramError::InvalidAccountData
@@ -94,7 +91,8 @@ pub fn get_oracle_price_fp32(
 }
 
 pub fn get_oracle_ema_price_fp32(
-    account_data: &[u8],
+    price_account_info: &AccountInfo,
+    no_older_than_s: u64,
     base_decimals: u8,
     quote_decimals: u8,
 ) -> Result<u64, ProgramError> {
@@ -107,10 +105,9 @@ pub fn get_oracle_ema_price_fp32(
     };
 
     // Pyth Oracle
-    let price_account = load_price_account(account_data)?;
+    let price_account = SolanaPriceAccount::account_info_to_feed(price_account_info)?;
     let Price { price, expo, .. } = price_account
-        .to_price_feed(&Pubkey::default())
-        .get_ema_price()
+        .get_ema_price_no_older_than(Clock::get()?.unix_timestamp, no_older_than_s)
         .ok_or_else(|| {
             msg!("Cannot parse pyth ema price, information unavailable.");
             ProgramError::InvalidAccountData
@@ -132,7 +129,8 @@ pub fn get_oracle_ema_price_fp32(
 }
 
 pub fn get_oracle_price_or_ema_fp32(
-    account_data: &[u8],
+    price_account_info: &AccountInfo,
+    no_older_than_s: u64,
     base_decimals: u8,
     quote_decimals: u8,
 ) -> Result<u64, ProgramError> {
@@ -145,13 +143,13 @@ pub fn get_oracle_price_or_ema_fp32(
     };
 
     // Pyth Oracle
-    let price_account = load_price_account(account_data)?;
-    let price_feed = price_account.to_price_feed(&Pubkey::default());
+    let price_feed = SolanaPriceAccount::account_info_to_feed(price_account_info)?;
+    let unix_timestamp = Clock::get()?.unix_timestamp;
     let Price { price, expo, .. } = price_feed
-        .get_current_price()
+        .get_price_no_older_than(unix_timestamp, no_older_than_s)
         .or_else(|| {
             msg!("Cannot parse pyth price, information unavailable. Fallback on EMA");
-            price_feed.get_ema_price()
+            price_feed.get_ema_price_no_older_than(unix_timestamp, no_older_than_s)
         })
         .unwrap();
     let price = if expo > 0 {
@@ -292,6 +290,7 @@ pub fn get_status(st: &PriceStatus) -> &'static str {
         PriceStatus::Trading => "trading",
         PriceStatus::Halted => "halted",
         PriceStatus::Auction => "auction",
+        PriceStatus::Ignored => "ignored",
     }
 }
 
@@ -310,7 +309,7 @@ mod test {
     pub fn test_sol() {
         // use pyth_sdk_solana::lo;
         use solana_client::rpc_client::RpcClient;
-        use solana_program::pubkey;
+        use solana_program::{account_info::IntoAccountInfo, pubkey};
 
         let pyth_sol_prod_acc = pubkey!("ALP8SdU9oARYVLgLR7LrqMNCYBnhtnQz1cj6bwgwQmgj");
         let pyth_sol_price_acc = pubkey!("H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG");
@@ -318,16 +317,19 @@ mod test {
 
         let prod_data = rpc_client.get_account_data(&pyth_sol_prod_acc).unwrap();
         let symbol = get_market_symbol(&prod_data).unwrap();
-        let price_data = rpc_client.get_account_data(&pyth_sol_price_acc).unwrap();
-        let price = get_oracle_price_fp32(&price_data, 6, 6).unwrap();
+        let mut price_data_account = rpc_client.get_account(&pyth_sol_price_acc).unwrap();
+
+        let price_data = (&pyth_sol_price_acc, &mut price_data_account).into_account_info();
+        let price = get_oracle_price_fp32(&price_data, 60, 6, 6).unwrap();
         println!("Found: '{}' FP32 Price: {}", symbol, price);
-        let ema_price = get_oracle_ema_price_fp32(&price_data, 6, 6).unwrap();
+        let ema_price = get_oracle_ema_price_fp32(&price_data, 60, 6, 6).unwrap();
         println!("Found: '{}' FP32 EMA Price: {}", symbol, ema_price);
     }
 
     #[test]
     fn print_pyth_oracles() {
         // use pyth_client::{load_mapping, load_price, load_product};
+        use pyth_sdk_solana::state::load_price_account;
         use solana_client::rpc_client::RpcClient;
         use solana_program::pubkey;
         use solana_program::pubkey::Pubkey;
@@ -342,9 +344,8 @@ mod test {
 
             // Get and print each Product in Mapping directory
             let mut i = 0;
-            for prod_akey in &map_acct.products {
-                let prod_pkey = Pubkey::from(prod_akey.val);
-                let prod_data = rpc_client.get_account_data(&prod_pkey).unwrap();
+            for prod_pkey in &map_acct.products {
+                let prod_data = rpc_client.get_account_data(prod_pkey).unwrap();
                 let prod_acc = load_product_account(&prod_data).unwrap();
 
                 // print key and reference data for this Product
@@ -356,11 +357,11 @@ mod test {
                 }
 
                 // print all Prices that correspond to this Product
-                if prod_acc.px_acc.is_valid() {
-                    let mut px_pkey = Pubkey::from(prod_acc.px_acc.val);
+                if prod_acc.px_acc != Pubkey::default() {
+                    let mut px_pkey = prod_acc.px_acc;
                     loop {
                         let pd = rpc_client.get_account_data(&px_pkey).unwrap();
-                        let pa = load_price_account(&pd).unwrap();
+                        let pa: &SolanaPriceAccount = load_price_account(&pd).unwrap();
                         println!("  price_account .. {:?}", px_pkey);
                         println!("    price_type ... {}", get_price_type(&pa.ptype));
                         println!("    exponent ..... {}", pa.expo);
@@ -372,8 +373,8 @@ mod test {
                         println!("    publish_slot . {}", pa.agg.pub_slot);
 
                         // go to next price account in list
-                        if pa.next.is_valid() {
-                            px_pkey = Pubkey::from(pa.next.val);
+                        if pa.next != Pubkey::default() {
+                            px_pkey = pa.next;
                         } else {
                             break;
                         }
@@ -387,10 +388,10 @@ mod test {
             }
 
             // go to next Mapping account in list
-            if !map_acct.next.is_valid() {
+            if map_acct.next == Pubkey::default() {
                 break;
             }
-            pyth_mapping_account = Pubkey::from(map_acct.next.val);
+            pyth_mapping_account = map_acct.next;
         }
     }
 

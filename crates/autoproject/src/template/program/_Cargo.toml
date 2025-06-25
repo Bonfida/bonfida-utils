@@ -10,7 +10,7 @@ no-entrypoint = []
 test-bpf = []
 
 [dependencies]
-solana-program = "1.18.26"
+solana-program = { workspace = true }
 num_enum = "0.5.4"
 borsh = "0.10.3"
 thiserror = "1.0.24"

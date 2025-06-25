@@ -2,3 +2,9 @@
 members = ["crates/*"]
 exclude = ["crates/autoproject/src/template"]
 resolver = "2"
+
+[workspace.dependencies]
+solana-program = "2.1.21"
+solana-program-test = "2.1.21"
+solana-sdk = "2.1.21"
+spl-token = "7.0.0"
