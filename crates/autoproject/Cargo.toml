@@ -2,7 +2,7 @@
 name = "bonfida-autoproject"
 description = "Utility to generate a solana smart contract template"
 license = "MIT"
-version = "0.6.9"
+version = "0.7.0"
 authors = ["Lcchy <lcchy@mailbox.org>"]
 edition = "2018"
 repository = "https://github.com/Bonfida/bonfida-utils.git"
