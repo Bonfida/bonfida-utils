@@ -15,6 +15,7 @@ use solana_program::{pubkey, sysvar::Sysvar};
 use std::convert::TryInto;
 
 pub const DEFAULT_PYTH_PUSH: Pubkey = pubkey!("pyt2F414BA6dPttK6RddPZUdHfapoBN24GL5wbrPCou");
+pub const PYTH_RECEIVER: Pubkey = pubkey!("rec2HHDDnjLfj4kE7VyEtFA1HPGQLK33259532cRyHp");
 pub const PRICE_FEED_DISCRIMATOR: [u8; 8] = [34, 241, 35, 99, 157, 126, 244, 205];
 
 pub fn check_price_acc_key(
@@ -189,7 +190,7 @@ pub fn get_oracle_price_fp32_v2(
     clock: &Clock,
     maximum_age: u64,
 ) -> Result<u64, ProgramError> {
-    check_account_owner(account, &pyth_solana_receiver_sdk::ID)?;
+    check_account_owner(account, &PYTH_RECEIVER)?;
 
     let data = &account.data.borrow() as &[u8];
 
@@ -228,7 +229,7 @@ pub fn get_oracle_price_from_feed_id_fp32(
     clock: &Clock,
     maximum_age: u64,
 ) -> Result<u64, ProgramError> {
-    check_account_owner(account, &pyth_solana_receiver_sdk::ID)?;
+    check_account_owner(account, &PYTH_RECEIVER)?;
 
     let data = &account.data.borrow() as &[u8];
 
@@ -415,7 +416,7 @@ mod test {
             data: Rc::new(RefCell::new(&mut account_data[..])),
             key: &key,
             lamports: Rc::new(RefCell::new(&mut lamports)),
-            owner: &pyth_solana_receiver_sdk::ID,
+            owner: &PYTH_RECEIVER,
             rent_epoch: u64::MAX,
             is_signer: false,
             is_writable: false,
