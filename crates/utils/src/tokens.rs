@@ -78,17 +78,17 @@ impl SupportedToken {
 
     pub const fn price_feed_account_key(self) -> Pubkey {
         match self {
-            SupportedToken::USDC => pubkey!("Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX"),
-            SupportedToken::USDT => pubkey!("HT2PLQBcG5EiCcNSaMHAjSgd9F98ecpATbk4Sk5oYuM"),
-            SupportedToken::Sol => pubkey!("7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE"),
-            SupportedToken::Fida => pubkey!("2cfmeuVBf7bvBJcjKBQgAwfvpUvdZV7K8NZxUEuccrub"),
-            SupportedToken::MSol => pubkey!("5CKzb9j4ChgLUt8Gfm5CNGLN6khXKiqMbnGAW4cgXgxK"),
-            SupportedToken::Bonk => pubkey!("DBE3N8uNjhKPRHfANdwGvCZghWXyLPdqdSbEW2XFwBiX"),
-            SupportedToken::BAT => pubkey!("EHH5mjVUsBUF7jD9nFcvB5TnG1fi6U54hRRphAxsVAWQ"),
-            SupportedToken::Pyth => pubkey!("8vjchtMuJNY4oFQdTi8yCe6mhCaNBFaUbktT482TpLPS"),
-            SupportedToken::BSol => pubkey!("5cN76Xm2Dtx9MnrQqBDeZZRsWruTTcw37UruznAdSvvE"),
-            SupportedToken::Inj => pubkey!("GwXYEfmPdgHcowF9GZwbb1WiTGTn1fuT3hbSLneoBKK6"),
-            SupportedToken::Trump => pubkey!("9vNb2tQoZ8bB4vzMbQLWViGwNaDJVtct13AGgno1wazp"),
+            SupportedToken::USDC => pubkey!("6HAuqASbHEh4w4REJEUUUCginTLfj1kwCh215ZLtMkrT"),
+            SupportedToken::USDT => pubkey!("3XBYLaF9wisQLaCxTgchH6xeNJGchwDauGpot1GcRMZV"),
+            SupportedToken::Sol => pubkey!("7AviUf9nL62mcxNbQGKm4nKDQnPjswo6c5MX4D57HmyE"),
+            SupportedToken::Fida => pubkey!("CNoEPodYZb7XrQs8RvBYH76pkfT1KBAWTfDxnfvWwTVw"), // Not supported
+            SupportedToken::MSol => pubkey!("Gtjm5bpCMxyNhjWe8GNDRq5KoBqhLJw63dWdcdpoq7nc"),
+            SupportedToken::Bonk => pubkey!("3nMpgBXnjBSDYupQQEVR7DZM65zkJCdKy1Up7nkqp99w"),
+            SupportedToken::BAT => pubkey!("h4sLcfmyrgPwAsmi2vGvKm3r22T4YRrAUKKRDQy7e44"), // Not supported
+            SupportedToken::Pyth => pubkey!("BTeWTCeCVxRXsHA6biwGvw6ynAovr3i7UDLsP9SzZTrA"),
+            SupportedToken::BSol => pubkey!("89WnYggXmjW7w1xgo91ctCcDadWuBx5DjcVU6pnhNX9b"),
+            SupportedToken::Inj => pubkey!("8XCPhEityrcUnKHudNWtBcpkbuwLFjBL9ibcbvzHhiZv"), // Not supported
+            SupportedToken::Trump => pubkey!("7m3TTzNMFwpMPVz7b8PDtQAKwvT62T1Jxnue2htLGXp"),
         }
     }
 
