@@ -14,7 +14,7 @@ use solana_program::{
 use solana_program::{pubkey, sysvar::Sysvar};
 use std::convert::TryInto;
 
-pub const DEFAULT_PYTH_PUSH: Pubkey = pubkey!("pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT");
+pub const DEFAULT_PYTH_PUSH: Pubkey = pubkey!("pyt2F414BA6dPttK6RddPZUdHfapoBN24GL5wbrPCou");
 pub const PRICE_FEED_DISCRIMATOR: [u8; 8] = [34, 241, 35, 99, 157, 126, 244, 205];
 
 pub fn check_price_acc_key(
