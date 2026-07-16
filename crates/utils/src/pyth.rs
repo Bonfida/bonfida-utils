@@ -417,7 +417,8 @@ mod test {
             key: &key,
             lamports: Rc::new(RefCell::new(&mut lamports)),
             owner: &PYTH_RECEIVER,
-            rent_epoch: u64::MAX,
+            #[allow(deprecated)]
+            _unused: u64::MAX,
             is_signer: false,
             is_writable: false,
             executable: false,
