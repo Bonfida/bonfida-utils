@@ -7,12 +7,15 @@ use pyth_sdk_solana::{
     },
     Price,
 };
-use pyth_solana_receiver_sdk::price_update::PriceUpdateV2;
 use solana_program::{
     account_info::AccountInfo, clock::Clock, msg, program_error::ProgramError, pubkey::Pubkey,
 };
 use solana_program::{pubkey, sysvar::Sysvar};
 use std::convert::TryInto;
+
+pub mod utils;
+
+use utils::PriceUpdateV2;
 
 pub const DEFAULT_PYTH_PUSH: Pubkey = pubkey!("pyt2F414BA6dPttK6RddPZUdHfapoBN24GL5wbrPCou");
 pub const PYTH_RECEIVER: Pubkey = pubkey!("rec2HHDDnjLfj4kE7VyEtFA1HPGQLK33259532cRyHp");
@@ -198,7 +201,7 @@ pub fn get_oracle_price_fp32_v2(
 
     let feed_id = SupportedToken::from_mint(token_mint).unwrap().price_feed();
 
-    let pyth_solana_receiver_sdk::price_update::Price {
+    let utils::Price {
         price, exponent, ..
     } = update
         .get_price_no_older_than(clock, maximum_age, &feed_id)
@@ -235,7 +238,7 @@ pub fn get_oracle_price_from_feed_id_fp32(
 
     let update = parse_price_v2(data).unwrap();
 
-    let pyth_solana_receiver_sdk::price_update::Price {
+    let utils::Price {
         price, exponent, ..
     } = update
         .get_price_no_older_than(clock, maximum_age, feed_id)

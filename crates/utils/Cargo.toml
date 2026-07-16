@@ -24,7 +24,7 @@ regex = { version = "1.11.1", optional = true }
 serde = { version = "1.0.136", features = ["derive"], optional = true }
 serde_json = { version = "1.0.79", optional = true }
 spl-token = { workspace = true, features = ["no-entrypoint"] }
-pyth-solana-receiver-sdk = "2.0.0"
+thiserror = "2.0.18"
 
 [dev-dependencies]
 solana-client = "4.1.2"
