@@ -1,6 +1,6 @@
 [package]
 name = "bonfida-macros"
-version = "0.8.0"
+version = "0.9.0"
 authors = ["ellttBen <elliott@bonfida.com>"]
 edition = "2018"
 description = "Bonfida-utils macros"
@@ -14,7 +14,7 @@ proc-macro = true
 
 [dependencies]
 solana-program = { workspace = true }
-syn = { version = "1.0", features = ["extra-traits"] }
+syn = { version = "1.0", features = ["extra-traits", "full"] }
 quote = "1.0"
 proc-macro2 = "1.0"
 # spl-name-service = { workspace = true }
