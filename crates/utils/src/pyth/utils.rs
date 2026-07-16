@@ -1,6 +1,6 @@
 use std::convert::TryInto;
 
-use borsh::BorshDeserialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{clock::Clock, pubkey::Pubkey};
 
 macro_rules! check {
@@ -20,7 +20,7 @@ pub struct Price {
     pub publish_time: i64,
 }
 
-#[derive(BorshDeserialize)]
+#[derive(BorshSerialize, BorshDeserialize)]
 pub enum VerificationLevel {
     Partial {
         #[allow(unused)]
@@ -61,7 +61,7 @@ pub enum GetPriceError {
     FeedIdNonHexCharacter,
 }
 
-#[derive(BorshDeserialize)]
+#[derive(BorshSerialize, BorshDeserialize)]
 pub struct PriceFeedMessage {
     /// `FeedId` but avoid the type alias because of compatibility issues with Anchor's `idl-build` feature.
     pub feed_id: [u8; 32],
@@ -87,7 +87,7 @@ pub struct PriceFeedMessage {
     pub ema_conf: u64,
 }
 
-#[derive(BorshDeserialize)]
+#[derive(BorshSerialize, BorshDeserialize)]
 pub struct PriceUpdateV2 {
     pub write_authority: Pubkey,
     pub verification_level: VerificationLevel,
