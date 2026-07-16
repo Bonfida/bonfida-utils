@@ -1,6 +1,6 @@
 [package]
 name = "bonfida-cli"
-version = "0.9.1"
+version = "0.9.2"
 description = "Bonfida CLI utilities for Solana development"
 license = "MIT"
 edition = "2021"

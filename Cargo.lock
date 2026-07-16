@@ -1005,7 +1005,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-autobindings"
-version = "0.9.1"
+version = "0.9.2"
 dependencies = [
  "anchor-syn",
  "cargo_toml",
@@ -1021,7 +1021,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-autodoc"
-version = "0.9.1"
+version = "0.9.2"
 dependencies = [
  "clap",
  "convert_case",
@@ -1033,7 +1033,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-autoproject"
-version = "0.9.1"
+version = "0.9.2"
 dependencies = [
  "clap",
  "convert_case",
@@ -1046,7 +1046,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-benchviz"
-version = "0.9.1"
+version = "0.9.2"
 dependencies = [
  "bonfida-utils",
  "clap",
@@ -1058,7 +1058,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-cli"
-version = "0.9.1"
+version = "0.9.2"
 dependencies = [
  "bonfida-autobindings",
  "bonfida-autodoc",
@@ -1069,7 +1069,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-macros"
-version = "0.9.1"
+version = "0.9.2"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1079,7 +1079,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-test-utils"
-version = "0.9.1"
+version = "0.9.2"
 dependencies = [
  "async-trait",
  "solana-program",
@@ -1091,7 +1091,7 @@ dependencies = [
 
 [[package]]
 name = "bonfida-utils"
-version = "0.9.1"
+version = "0.9.2"
 dependencies = [
  "bonfida-macros",
  "borsh",
