@@ -17,6 +17,20 @@
     }:
     let
       pkgs = solana-nix.inputs.nixpkgs.legacyPackages."x86_64-linux";
+      cargo-release = pkgs.rustPlatform.buildRustPackage (finalAttrs: {
+        pname = "cargo-release";
+        version = "1.1.0";
+        src = pkgs.fetchCrate {
+          inherit (finalAttrs) pname version;
+          hash = "sha256-yUmQXLajDbO5f/Hzrxw7Upr23SuEJWEBFFwsfo9N9Qw=";
+        };
+        cargoHash = "sha256-iI6UDGD5RtCNj4s3htZqoEMP5++GFWcNH6ViOLXsCK8=";
+        nativeBuildInputs = [
+          pkgs.perl
+        ];
+        doCheck = false;
+      });
+
     in
     {
       devShells."x86_64-linux".default = pkgs.mkShell {
@@ -33,6 +47,7 @@
           solana-nix.packages.x86_64-linux.solana-platform-tools
           solana-nix.packages.x86_64-linux.solana-cli
           solana-nix.packages.x86_64-linux.anchor-cli
+          cargo-release
         ];
 
         nativeBuildInputs = [ pkgs.pkg-config ];
