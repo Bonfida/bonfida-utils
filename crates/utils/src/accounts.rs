@@ -183,7 +183,7 @@ mod tests {
         assert_eq!(instruction.accounts[8].is_signer, true);
         assert_eq!(instruction.accounts[8].pubkey, *a.i.unwrap());
         let mut instruction_data = vec![0];
-        instruction_data.extend(&params.try_to_vec().unwrap());
+        instruction_data.extend(borsh::to_vec(&params).unwrap());
 
         assert_eq!(instruction_data, instruction.data);
 
@@ -249,7 +249,7 @@ mod tests {
         assert_eq!(instruction.accounts[10].is_signer, true);
         assert_eq!(instruction.accounts[10].pubkey, *a.i[2]);
         let mut instruction_data = vec![0];
-        instruction_data.extend(&params.try_to_vec().unwrap());
+        instruction_data.extend(borsh::to_vec(&params).unwrap());
 
         assert_eq!(instruction_data, instruction.data);
 

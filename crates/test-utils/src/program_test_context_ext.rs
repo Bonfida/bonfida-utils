@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use solana_program::{
-    clock::Clock, instruction::Instruction, program_pack::Pack, pubkey::Pubkey, rent::Rent,
-    system_instruction::create_account,
+    clock::Clock, example_mocks::solana_sdk::system_instruction, instruction::Instruction,
+    program_pack::Pack, pubkey::Pubkey, rent::Rent,
 };
 use solana_program_test::ProgramTestContext;
 use solana_sdk::{signature::Keypair, signer::Signer, transaction::Transaction};
@@ -150,7 +150,7 @@ impl ProgramTestContextExt for ProgramTestContext {
         let account_keypair = Keypair::new();
         let rent = self.banks_client.get_sysvar::<Rent>().await.unwrap();
         let lamports = rent.minimum_balance(space);
-        let ix = create_account(
+        let ix = system_instruction::create_account(
             &self.payer.pubkey(),
             &account_keypair.pubkey(),
             lamports,

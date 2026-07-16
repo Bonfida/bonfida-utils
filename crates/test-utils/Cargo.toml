@@ -11,8 +11,8 @@ repository = "https://github.com/Bonfida/bonfida-utils.git"
 
 [dependencies]
 solana-program = { workspace = true }
-solana-program-test = { workspace = true }
+solana-program-test = { workspace = true, features = ["agave-unstable-api"] }
 solana-sdk = { workspace = true }
-spl-token = "4.0.0"
+spl-token = { workspace = true }
 async-trait = "0.1.56"
-spl-associated-token-account = "3.0.2"
+spl-associated-token-account = "8.0.0"
