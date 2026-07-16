@@ -7,13 +7,11 @@ pub enum SupportedToken {
     USDC,
     USDT,
     Sol,
-    Fida,
     MSol,
     Bonk,
     BAT,
     Pyth,
     BSol,
-    Inj,
     Trump,
 }
 
@@ -35,13 +33,13 @@ impl SupportedToken {
             SupportedToken::USDC => USDC_MINT,
             SupportedToken::USDT => USDT_MINT,
             SupportedToken::Sol => SOL_MINT,
-            SupportedToken::Fida => FIDA_MINT,
+            // SupportedToken::Fida => FIDA_MINT,
             SupportedToken::MSol => MSOL_MINT,
             SupportedToken::Bonk => BONK_MINT,
             SupportedToken::BAT => BAT_MINT,
             SupportedToken::Pyth => PYTH_MINT,
             SupportedToken::BSol => BSOL_MINT,
-            SupportedToken::Inj => INJ_MINT,
+            // SupportedToken::Inj => INJ_MINT,
             SupportedToken::Trump => TRUMP_MINT,
         }
     }
@@ -51,13 +49,11 @@ impl SupportedToken {
             USDC_MINT => SupportedToken::USDC,
             USDT_MINT => SupportedToken::USDT,
             SOL_MINT => SupportedToken::Sol,
-            FIDA_MINT => SupportedToken::Fida,
             MSOL_MINT => SupportedToken::MSol,
             BONK_MINT => SupportedToken::Bonk,
             BAT_MINT => SupportedToken::BAT,
             PYTH_MINT => SupportedToken::Pyth,
             BSOL_MINT => SupportedToken::BSol,
-            INJ_MINT => SupportedToken::Inj,
             TRUMP_MINT => SupportedToken::Trump,
             _ => return Err(ProgramError::InvalidArgument),
         })
@@ -67,10 +63,9 @@ impl SupportedToken {
         match self {
             SupportedToken::Sol | SupportedToken::MSol | SupportedToken::BSol => 9,
             SupportedToken::Bonk => 5,
-            SupportedToken::BAT | SupportedToken::Inj => 8,
+            SupportedToken::BAT => 8,
             SupportedToken::USDC
             | SupportedToken::USDT
-            | SupportedToken::Fida
             | SupportedToken::Pyth
             | SupportedToken::Trump => 6,
         }
@@ -81,13 +76,11 @@ impl SupportedToken {
             SupportedToken::USDC => pubkey!("6HAuqASbHEh4w4REJEUUUCginTLfj1kwCh215ZLtMkrT"),
             SupportedToken::USDT => pubkey!("3XBYLaF9wisQLaCxTgchH6xeNJGchwDauGpot1GcRMZV"),
             SupportedToken::Sol => pubkey!("7AviUf9nL62mcxNbQGKm4nKDQnPjswo6c5MX4D57HmyE"),
-            SupportedToken::Fida => pubkey!("CNoEPodYZb7XrQs8RvBYH76pkfT1KBAWTfDxnfvWwTVw"), // Not supported
             SupportedToken::MSol => pubkey!("Gtjm5bpCMxyNhjWe8GNDRq5KoBqhLJw63dWdcdpoq7nc"),
             SupportedToken::Bonk => pubkey!("3nMpgBXnjBSDYupQQEVR7DZM65zkJCdKy1Up7nkqp99w"),
             SupportedToken::BAT => pubkey!("h4sLcfmyrgPwAsmi2vGvKm3r22T4YRrAUKKRDQy7e44"), // Not supported
             SupportedToken::Pyth => pubkey!("BTeWTCeCVxRXsHA6biwGvw6ynAovr3i7UDLsP9SzZTrA"),
             SupportedToken::BSol => pubkey!("89WnYggXmjW7w1xgo91ctCcDadWuBx5DjcVU6pnhNX9b"),
-            SupportedToken::Inj => pubkey!("8XCPhEityrcUnKHudNWtBcpkbuwLFjBL9ibcbvzHhiZv"), // Not supported
             SupportedToken::Trump => pubkey!("7m3TTzNMFwpMPVz7b8PDtQAKwvT62T1Jxnue2htLGXp"),
         }
     }
@@ -105,10 +98,6 @@ impl SupportedToken {
             SupportedToken::Sol => [
                 239, 13, 139, 111, 218, 44, 235, 164, 29, 161, 93, 64, 149, 209, 218, 57, 42, 13,
                 47, 142, 208, 198, 199, 188, 15, 76, 250, 200, 194, 128, 181, 109,
-            ],
-            SupportedToken::Fida => [
-                200, 6, 87, 183, 246, 243, 234, 194, 114, 24, 208, 157, 90, 78, 84, 228, 123, 37,
-                118, 141, 159, 94, 16, 172, 21, 254, 44, 249, 0, 136, 20, 0,
             ],
             SupportedToken::MSol => [
                 194, 40, 154, 106, 67, 210, 206, 145, 198, 245, 92, 174, 195, 112, 244, 172, 195,
@@ -129,10 +118,6 @@ impl SupportedToken {
             SupportedToken::BSol => [
                 137, 135, 83, 121, 231, 15, 143, 186, 220, 23, 174, 243, 21, 173, 243, 168, 213,
                 209, 96, 184, 17, 67, 85, 55, 224, 60, 151, 232, 170, 201, 125, 156,
-            ],
-            SupportedToken::Inj => [
-                122, 91, 193, 210, 181, 106, 208, 41, 4, 140, 214, 57, 100, 179, 173, 39, 118, 234,
-                223, 129, 46, 220, 26, 67, 163, 20, 6, 203, 84, 191, 245, 146,
             ],
             SupportedToken::Trump => [
                 135, 149, 81, 2, 24, 83, 238, 199, 167, 220, 130, 117, 120, 232, 230, 157, 167,
@@ -162,10 +147,6 @@ mod test {
             get_pyth_feed_account_key(0, &SupportedToken::Sol.price_feed())
         );
         assert_eq!(
-            SupportedToken::Fida.price_feed_account_key(),
-            get_pyth_feed_account_key(0, &SupportedToken::Fida.price_feed())
-        );
-        assert_eq!(
             SupportedToken::MSol.price_feed_account_key(),
             get_pyth_feed_account_key(0, &SupportedToken::MSol.price_feed())
         );
@@ -184,10 +165,6 @@ mod test {
         assert_eq!(
             SupportedToken::BSol.price_feed_account_key(),
             get_pyth_feed_account_key(0, &SupportedToken::BSol.price_feed())
-        );
-        assert_eq!(
-            SupportedToken::Inj.price_feed_account_key(),
-            get_pyth_feed_account_key(0, &SupportedToken::Inj.price_feed())
         );
         assert_eq!(
             SupportedToken::Trump.price_feed_account_key(),
@@ -213,12 +190,6 @@ mod test {
         assert_eq!(
             SupportedToken::Sol.price_feed(),
             hex::decode("ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d")
-                .unwrap()
-                .as_slice()
-        );
-        assert_eq!(
-            SupportedToken::Fida.price_feed(),
-            hex::decode("c80657b7f6f3eac27218d09d5a4e54e47b25768d9f5e10ac15fe2cf900881400")
                 .unwrap()
                 .as_slice()
         );
@@ -249,12 +220,6 @@ mod test {
         assert_eq!(
             SupportedToken::BSol.price_feed(),
             hex::decode("89875379e70f8fbadc17aef315adf3a8d5d160b811435537e03c97e8aac97d9c")
-                .unwrap()
-                .as_slice()
-        );
-        assert_eq!(
-            SupportedToken::Inj.price_feed(),
-            hex::decode("7a5bc1d2b56ad029048cd63964b3ad2776eadf812edc1a43a31406cb54bff592")
                 .unwrap()
                 .as_slice()
         );
